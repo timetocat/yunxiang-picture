@@ -1,7 +1,10 @@
 package com.lyx.lopicture.mapper;
 
-import com.lyx.lopicture.model.entity.Picture;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lyx.lopicture.model.dto.picture.PictureQueryRequest;
+import com.lyx.lopicture.model.entity.Picture;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * @author Administrator
@@ -10,6 +13,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  * @Entity com.lyx.lopicture.model.entity.Picture
  */
 public interface PictureMapper extends BaseMapper<Picture> {
+
+    Page<Picture> selectPage(Page<Picture> page, @Param("query") PictureQueryRequest pictureQueryRequest);
 
 }
 

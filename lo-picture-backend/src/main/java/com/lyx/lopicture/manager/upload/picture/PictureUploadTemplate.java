@@ -11,7 +11,7 @@ import javax.annotation.Resource;
 import java.util.Date;
 
 @Slf4j
-public abstract class PictureUpload {
+public abstract class PictureUploadTemplate {
 
     @Resource
     protected OsManager osManager;

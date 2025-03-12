@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-public class UrlPictureUpload extends PictureUpload {
+public class UrlPictureUpload extends PictureUploadTemplate {
 
     /**
      * 校验输入源（本地文件或 URL）

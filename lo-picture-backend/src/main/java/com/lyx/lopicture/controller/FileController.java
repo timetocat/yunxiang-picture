@@ -8,7 +8,7 @@ import com.lyx.lopicture.constant.UserConstant;
 import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.manager.osManager.OsManager;
-import com.lyx.lopicture.manager.upload.picture.PictureUpload;
+import com.lyx.lopicture.manager.upload.picture.PictureUploadTemplate;
 import com.lyx.lopicture.model.dto.file.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +26,7 @@ public class FileController {
     private OsManager osManager;
 
     @Resource(name = "filePictureUpload")
-    private PictureUpload pictureUpload;
+    private PictureUploadTemplate pictureUpload;
 
     /**
      * 测试文件上传

@@ -32,4 +32,78 @@
         create_time,edit_time,update_time,
         is_delete
     </sql>
+    <select id="selectPage" resultMap="BaseResultMap"><!--resultType="com.lyx.lopicture.model.entity.Picture">-->
+        SELECT
+        id,
+        url,
+        `name`,
+        introduction,
+        `category`,
+        tags,
+        pic_size,
+        pic_width,
+        pic_height,
+        pic_scale,
+        pic_format,
+        user_id,
+        create_time,
+        edit_time,
+        update_time
+        FROM picture
+        <where>
+            is_delete = 0
+            <if test="query.id != null">
+                AND id = #{query.id}
+            </if>
+            <if test="query.userId != null">
+                AND user_id = #{query.userId}
+            </if>
+            <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.category)">
+                AND `category` = #{query.category}
+            </if>
+            <if test="query.picSize != null">
+                AND pic_size = #{query.picSize}
+            </if>
+            <if test="query.picWidth != null">
+                AND pic_width = #{query.picWidth}
+            </if>
+            <if test="query.picHeight != null">
+                AND pic_height = #{query.picHeight}
+            </if>
+            <if test="query.picScale != null">
+                AND pic_scale = #{query.picScale}
+            </if>
+            <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.searchText)">
+                AND (name LIKE CONCAT('%', #{query.searchText}, '%')
+                OR introduction LIKE CONCAT('%', #{query.searchText}, '%'))
+            </if>
+            <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.name)">
+                AND name LIKE CONCAT('%', #{query.name}, '%')
+            </if>
+            <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.introduction)">
+                AND introduction LIKE CONCAT('%', #{query.introduction}, '%')
+            </if>
+            <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.picFormat)">
+                AND pic_format LIKE CONCAT('%', #{query.picFormat}, '%')
+            </if>
+            <if test="@cn.hutool.core.collection.CollUtil@isNotEmpty(query.tags)">
+                <bind name="tagsJson" value="@cn.hutool.json.JSONUtil@toJsonStr(query.tags)"/>
+                AND JSON_CONTAINS(tags, #{tagsJson}, '$')
+            </if>
+        </where>
+        <if test="query.sortFieldPairs != null and query.sortFieldPairs.size() > 0">
+            <foreach collection="query.sortFieldPairs" item="sortField" open="ORDER BY" separator="," close="">
+                ${sortField.sortField}
+                <choose>
+                    <when test="sortField.sortOrder != null and sortField.sortOrder != ''
+                        and sortField.sortOrder == 'ascend' ">
+                        ASC
+                    </when>
+                    <otherwise>
+                        DESC
+                    </otherwise>
+                </choose>
+            </foreach>
+        </if>
+    </select>
 </mapper>
