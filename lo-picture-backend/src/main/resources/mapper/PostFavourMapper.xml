@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lyx.lopicture.mapper.PostFavourMapper">
+
+    <resultMap id="BaseResultMap" type="com.lyx.lopicture.model.entity.PostFavour">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="postId" column="post_id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,post_id,user_id,
+        create_time,update_time
+    </sql>
+
+    <select id="listFavourPostByPage" resultType="com.lyx.lopicture.model.entity.Post">
+        SELECT
+        id,
+        title,
+        `content`,
+        tags,
+        thumb_num,
+        favour_num,
+        user_id,
+        create_time
+        FROM post p
+        JOIN (SELECT post_id FROM post_favour WHERE user_id = #{favourUser_id}) pf
+        ON p.id = pf.post_id
+        <where>
+            <if test="query.id != null">
+                id = #{query.id}
+            </if>
+            <if test="query.notId != null">
+                AND id != #{query.notId}
+            </if>
+            <if test="query.userId != null">
+                AND user_id = #{query.userId}
+            </if>
+            <if test="query.searchText != null and query.searchText != '' ">
+                AND (title LIKE CONCAT('%', #{query.searchText}, '%')
+                OR `content` LIKE CONCAT('%', #{query.searchText}, '%'))
+            </if>
+            <if test="query.title != null and query.title != '' ">
+                AND title LIKE CONCAT('%', #{query.title}, '%')
+            </if>
+            <if test="query.content != null and query.content != '' ">
+                AND `content` LIKE CONCAT('%', #{query.content}, '%')
+            </if>
+            <if test="query.tags != null and query.tags.size() > 0">
+                <foreach collection="query.tags" item="tag" open="AND (" close=")" separator=" AND ">
+                    tags LIKE CONCAT('%', #{tag}, '%')
+                </foreach>
+            </if>
+        </where>
+        <if test="query.sortFieldPairs != null and query.sortFieldPairs.size() > 0">
+            <foreach collection="query.sortFieldPairs" item="sortField" open="ORDER BY" separator="," close="">
+                ${sortField.sortField}
+                <choose>
+                    <when test="sortField.sortOrder != null and sortField.sortOrder != ''
+                        and sortField.sortOrder == 'ascend' ">
+                        ASC
+                    </when>
+                    <otherwise>
+                        DESC
+                    </otherwise>
+                </choose>
+            </foreach>
+        </if>
+    </select>
+
+</mapper>
