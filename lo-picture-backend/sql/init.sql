@@ -65,7 +65,7 @@ create table if not exists picture
     introduction varchar(512)                       null comment '简介',
     category     varchar(64)                        null comment '分类',
     tags         json                               null comment '标签（JSON 数组）',
-    picSize      bigint                             null comment '图片体积',
+    pic_size     bigint                             null comment '图片体积',
     pic_width    int                                null comment '图片宽度',
     pic_height   int                                null comment '图片高度',
     pic_scale    double                             null comment '图片宽高比例',

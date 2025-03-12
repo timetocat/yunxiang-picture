@@ -55,8 +55,8 @@ public class Picture implements Serializable {
     /**
      * 图片体积
      */
-    @TableField(value = "picSize")
-    private Long picsize;
+    @TableField(value = "pic_size")
+    private Long picSize;
 
     /**
      * 图片宽度

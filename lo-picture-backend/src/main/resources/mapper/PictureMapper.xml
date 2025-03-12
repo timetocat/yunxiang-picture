@@ -12,7 +12,7 @@
         <result property="category" column="category" jdbcType="VARCHAR"/>
         <result property="tags" column="tags" jdbcType="OTHER"
                 typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
-        <result property="picsize" column="picSize" jdbcType="BIGINT"/>
+        <result property="picSize" column="pic_size" jdbcType="BIGINT"/>
         <result property="picWidth" column="pic_width" jdbcType="INTEGER"/>
         <result property="picHeight" column="pic_height" jdbcType="INTEGER"/>
         <result property="picScale" column="pic_scale" jdbcType="DOUBLE"/>
@@ -27,7 +27,7 @@
     <sql id="Base_Column_List">
         id,url,`name`,
         introduction,`category`,tags,
-        picSize,pic_width,pic_height,
+        pic_size,pic_width,pic_height,
         pic_scale,pic_format,user_id,
         create_time,edit_time,update_time,
         is_delete
