@@ -91,6 +91,14 @@ public interface PictureService extends IService<Picture> {
     Boolean doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
 
     /**
+     * 上传图片（批量）
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     * @return
+     */
+    int uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
+
+    /**
      * 判断图片是否存在
      *
      * @param id      主键id
