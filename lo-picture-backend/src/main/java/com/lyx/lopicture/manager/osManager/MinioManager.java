@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,9 @@ public class MinioManager implements OsManager {
     @Resource
     private MinioConfig minioConfig;
 
+    @Value("${default.os-format:webp}")
+    private String osFormat;
+
     // 上传对象
     private final PutOperator<MultipartFile, ObjectWriteResponse> putOperator = (key, file) -> {
         try {
@@ -53,25 +57,26 @@ public class MinioManager implements OsManager {
         } catch (Exception e) {
             log.error("文件上传失败", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件上传失败");
-        } finally {
+        } /*finally {
             this.deleteTempFile(file);
-        }
+        }*/
     };
 
     // 上传对象（附带图片信息）
     private final PutOperator<File, ByteArrayOutputStream> putPictureByFileOperator = (key, file) -> {
         ByteArrayOutputStream thumbnailOutputStream = null;
         ByteArrayOutputStream originOutputStream = new ByteArrayOutputStream();
-        try (InputStream inputStream = new FileInputStream(file)) {
+        try (InputStream inputStream = new FileInputStream(file);
+                InputStream originInputStream = new FileInputStream(file)) {
             if (file.length() > USE_THUMBNAIL_SIZE) {
                 thumbnailOutputStream = new ByteArrayOutputStream();
-                processPicture(inputStream, 0.25, FileUtil.getSuffix(key), thumbnailOutputStream);
+                processPicture(inputStream, 0.25, osFormat, thumbnailOutputStream);
                 // 拼接缩略图的路径
-                String thumbnailKey = OsManager.getThumbnailKey(key);
-                putObject(thumbnailKey, IoUtil.toStream(thumbnailOutputStream.toByteArray()), thumbnailOutputStream.size(),
-                        FileUtil.getMimeType(file.toPath()));
+                String thumbnailKey = String.format("%s.%s", OsManager.getThumbnailKey(key), osFormat);
+                putObject(thumbnailKey, IoUtil.toStream(thumbnailOutputStream.toByteArray()),
+                        thumbnailOutputStream.size(), String.format("image/%s", osFormat));
             }
-            processPicture(inputStream, 1, "webp", originOutputStream);
+            processPicture(originInputStream, 1, "webp", originOutputStream);
             putObject(getWebpKey(key), IoUtil.toStream(originOutputStream.toByteArray()),
                     originOutputStream.size(), "image/webp");
             return originOutputStream;
@@ -81,7 +86,7 @@ public class MinioManager implements OsManager {
         } finally {
             IoUtil.close(thumbnailOutputStream);
             IoUtil.close(originOutputStream);
-            this.deleteTempFile(file);
+            // this.deleteTempFile(file);
         }
     };
 
@@ -123,7 +128,13 @@ public class MinioManager implements OsManager {
         if (t instanceof MultipartFile) {
             return (R) putOperator.put(key, (MultipartFile) t);
         } else if (t instanceof String) {
-            return (R) putByFileOperator.put(key, processType(t, key));
+            File file = null;
+            try {
+                file = processType(t, key);
+                return (R) putByFileOperator.put(key, file);
+            } finally {
+                this.deleteTempFile(file);
+            }
         }
         throw new BusinessException(ErrorCode.PARAMS_ERROR);
     }

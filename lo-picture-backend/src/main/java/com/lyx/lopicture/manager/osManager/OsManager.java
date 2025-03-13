@@ -99,7 +99,7 @@ public interface OsManager {
      * @return 处理后的对象
      */
     default File processType(String url, String key) {
-        File file = null;
+        File file;
         try {
             file = File.createTempFile(key, null);
             HttpUtil.downloadFile(url, file);
@@ -107,8 +107,6 @@ public interface OsManager {
         } catch (IOException e) {
             log.error("文件上传失败", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件上传失败");
-        } finally {
-            this.deleteTempFile(file);
         }
     }
 

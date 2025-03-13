@@ -54,38 +54,34 @@ public class CosManager implements OsManager {
     private final PutOperator<File, PutObjectResult> putPictureOperator = (key, file) -> {
         PutObjectRequest putObjectRequest = new PutObjectRequest(cosClientConfig.getBucket(), key,
                 file);
-        try {
-            // 对图片进行处理（获取基本信息也被视作为一种图片的处理）
-            PicOperations picOperations = new PicOperations();
-            // 1 表示返回原图信息
-            picOperations.setIsPicInfo(1);
-            // 图片处理规则列表
-            List<PicOperations.Rule> rules = new ArrayList<>();
-            // 1. 图片压缩（转成 webp 格式）
-            String webpKey = FileUtil.mainName(key) + ".webp";
-            PicOperations.Rule compressRule = new PicOperations.Rule();
-            compressRule.setFileId(webpKey);
-            compressRule.setBucket(cosClientConfig.getBucket());
-            compressRule.setRule("imageMogr2/format/webp");
-            rules.add(compressRule);
-            // 2. 缩略图处理，仅对 > 20 KB 的图片生成缩略图
-            if (file.length() > USE_THUMBNAIL_SIZE) {
-                PicOperations.Rule thumbnailRule = new PicOperations.Rule();
-                // 拼接缩略图的路径
-                String thumbnailKey = OsManager.getThumbnailKey(key);
-                thumbnailRule.setFileId(thumbnailKey);
-                thumbnailRule.setBucket(cosClientConfig.getBucket());
-                // 缩放规则 /thumbnail/<Width>x<Height>>（如果大于原图宽高，则不处理）
-                thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 256, 256));
-                rules.add(thumbnailRule);
-            }
-            // 构造处理参数
-            picOperations.setRules(rules);
-            putObjectRequest.setPicOperations(picOperations);
-            return cosClient.putObject(putObjectRequest);
-        } finally {
-            this.deleteTempFile(file);
+        // 对图片进行处理（获取基本信息也被视作为一种图片的处理）
+        PicOperations picOperations = new PicOperations();
+        // 1 表示返回原图信息
+        picOperations.setIsPicInfo(1);
+        // 图片处理规则列表
+        List<PicOperations.Rule> rules = new ArrayList<>();
+        // 1. 图片压缩（转成 webp 格式）
+        String webpKey = FileUtil.mainName(key) + ".webp";
+        PicOperations.Rule compressRule = new PicOperations.Rule();
+        compressRule.setFileId(webpKey);
+        compressRule.setBucket(cosClientConfig.getBucket());
+        compressRule.setRule("imageMogr2/format/webp");
+        rules.add(compressRule);
+        // 2. 缩略图处理，仅对 > 20 KB 的图片生成缩略图
+        if (file.length() > USE_THUMBNAIL_SIZE) {
+            PicOperations.Rule thumbnailRule = new PicOperations.Rule();
+            // 拼接缩略图的路径
+            String thumbnailKey = OsManager.getThumbnailKey(key);
+            thumbnailRule.setFileId(thumbnailKey);
+            thumbnailRule.setBucket(cosClientConfig.getBucket());
+            // 缩放规则 /thumbnail/<Width>x<Height>>（如果大于原图宽高，则不处理）
+            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>", 256, 256));
+            rules.add(thumbnailRule);
         }
+        // 构造处理参数
+        picOperations.setRules(rules);
+        putObjectRequest.setPicOperations(picOperations);
+        return cosClient.putObject(putObjectRequest);
     };
 
     // 处理上传类型
@@ -110,10 +106,17 @@ public class CosManager implements OsManager {
      */
     @Override
     public <T, R> R putObject(String key, T t) {
-        if (t instanceof File) {
-            return (R) putOperator.put(key, (File) t);
+        File file = null;
+        try {
+            if (t instanceof File) {
+                file = (File) t;
+                return (R) putOperator.put(key, file);
+            }
+            file = processType(t, key);
+            return (R) putOperator.put(key, file);
+        } finally {
+            this.deleteTempFile(file);
         }
-        return (R) putOperator.put(key, processType(t, key));
     }
 
     /**
@@ -192,25 +195,34 @@ public class CosManager implements OsManager {
      */
     @Override
     public UploadPictureResult uploadPicture(Object inputSource, String key, String originalFilename) {
-        PutObjectResult putObjectResult = putPictureObject(key, inputSource);
-        // 获取图片信息对象，封装返回结果
-        ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
-        // 获取到图片处理结果
-        ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
-        List<CIObject> objectList = processResults.getObjectList();
-        if (CollUtil.isNotEmpty(objectList)) {
-            // 获取压缩之后得到的文件信息
-            CIObject compressedCiObject = objectList.get(0);
-            // 缩略图默认等于压缩图
-            CIObject thumbnailCiObject = compressedCiObject;
-            // 有生成缩略图，才获取缩略图
-            if (objectList.size() > 1) {
-                thumbnailCiObject = objectList.get(1);
+        File file = null;
+        try {
+            PutObjectResult putObjectResult = putPictureObject(key, inputSource);
+            // 获取图片信息对象，封装返回结果
+            ImageInfo imageInfo = putObjectResult.getCiUploadResult().getOriginalInfo().getImageInfo();
+            // 获取到图片处理结果
+            ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
+            List<CIObject> objectList = processResults.getObjectList();
+            if (CollUtil.isNotEmpty(objectList)) {
+                // 获取压缩之后得到的文件信息
+                CIObject compressedCiObject = objectList.get(0);
+                // 缩略图默认等于压缩图
+                CIObject thumbnailCiObject = compressedCiObject;
+                // 有生成缩略图，才获取缩略图
+                if (objectList.size() > 1) {
+                    thumbnailCiObject = objectList.get(1);
+                }
+                // 封装压缩图的返回结果
+                return buildResult(originalFilename, compressedCiObject, thumbnailCiObject);
             }
-            // 封装压缩图的返回结果
-            return buildResult(originalFilename, compressedCiObject, thumbnailCiObject);
+            file = processType(inputSource, key);
+            return buildResult(originalFilename, file, key, imageInfo);
+        } finally {
+            this.deleteTempFile(file);
+            if (inputSource instanceof File) {
+                this.deleteTempFile((File) inputSource);
+            }
         }
-        return buildResult(originalFilename, processType(inputSource, key), key, imageInfo);
     }
 
     /**

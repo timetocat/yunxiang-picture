@@ -51,6 +51,8 @@ default:
   enable-os: false
   # 默认OS服务
   os: minio
+  # 使用url上传图片时缩略图默认格式
+  os-format: jpg
 
 # 对象存储配置（需要从腾讯云获取）
 cos:
