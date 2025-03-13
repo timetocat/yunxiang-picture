@@ -18,6 +18,10 @@
         <result property="picScale" column="pic_scale" jdbcType="DOUBLE"/>
         <result property="picFormat" column="pic_format" jdbcType="VARCHAR"/>
         <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="reviewStatus" column="review_status" jdbcType="INTEGER"/>
+        <result property="reviewMessage" column="review_message" jdbcType="VARCHAR"/>
+        <result property="reviewerId" column="reviewer_id" jdbcType="BIGINT"/>
+        <result property="reviewTime" column="review_time" jdbcType="TIMESTAMP"/>
         <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
         <result property="editTime" column="edit_time" jdbcType="TIMESTAMP"/>
         <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
@@ -29,6 +33,8 @@
         introduction,`category`,tags,
         pic_size,pic_width,pic_height,
         pic_scale,pic_format,user_id,
+        review_status,review_message,
+        reviewer_id,review_time,
         create_time,edit_time,update_time,
         is_delete
     </sql>

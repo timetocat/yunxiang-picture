@@ -1,6 +1,7 @@
 package com.lyx.lopicture.model.convert;
 
 import com.lyx.lopicture.model.dto.picture.PictureEditRequest;
+import com.lyx.lopicture.model.dto.picture.PictureReviewRequest;
 import com.lyx.lopicture.model.dto.picture.PictureUpdateRequest;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.vo.PictureVO;
@@ -18,6 +19,8 @@ public interface PictureConvert {
     Picture mapToPicture(PictureUpdateRequest pictureUpdateRequest);
 
     Picture mapToPicture(PictureEditRequest pictureEditRequest);
+
+    Picture mapToPicture(PictureReviewRequest pictureReviewRequest);
 
     @Mappings({
             @Mapping(source = "picture.id", target = "id"),

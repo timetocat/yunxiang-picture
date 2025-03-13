@@ -2,10 +2,7 @@ package com.lyx.lopicture.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.lyx.lopicture.model.dto.picture.PictureEditRequest;
-import com.lyx.lopicture.model.dto.picture.PictureQueryRequest;
-import com.lyx.lopicture.model.dto.picture.PictureUpdateRequest;
-import com.lyx.lopicture.model.dto.picture.PictureUploadRequest;
+import com.lyx.lopicture.model.dto.picture.*;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.vo.PictureVO;
@@ -85,6 +82,15 @@ public interface PictureService extends IService<Picture> {
     Boolean editPicture(PictureEditRequest pictureEditRequest, User loginUser);
 
     /**
+     * 审核图片
+     *
+     * @param pictureReviewRequest 图片审核请求
+     * @param loginUser            登录用户
+     * @return 是否审核成功
+     */
+    Boolean doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
+    /**
      * 判断图片是否存在
      *
      * @param id      主键id
@@ -93,5 +99,12 @@ public interface PictureService extends IService<Picture> {
      */
     Boolean checkPictureExist(Long id, Boolean throwEx);
 
+    /**
+     * 填充审核参数
+     *
+     * @param picture   图片
+     * @param loginUser 登录用户
+     */
+    void fillReviewParams(Picture picture, User loginUser);
 
 }

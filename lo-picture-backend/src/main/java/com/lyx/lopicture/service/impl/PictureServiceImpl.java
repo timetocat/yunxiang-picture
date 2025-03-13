@@ -14,12 +14,10 @@ import com.lyx.lopicture.manager.upload.picture.UrlPictureUpload;
 import com.lyx.lopicture.mapper.PictureMapper;
 import com.lyx.lopicture.model.convert.PictureConvert;
 import com.lyx.lopicture.model.dto.file.UploadPictureResult;
-import com.lyx.lopicture.model.dto.picture.PictureEditRequest;
-import com.lyx.lopicture.model.dto.picture.PictureQueryRequest;
-import com.lyx.lopicture.model.dto.picture.PictureUpdateRequest;
-import com.lyx.lopicture.model.dto.picture.PictureUploadRequest;
+import com.lyx.lopicture.model.dto.picture.*;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.entity.User;
+import com.lyx.lopicture.model.enums.PictureReviewStatusEnum;
 import com.lyx.lopicture.model.vo.PictureVO;
 import com.lyx.lopicture.model.vo.UserVO;
 import com.lyx.lopicture.service.PictureService;
@@ -28,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,6 +99,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         picture.setPicScale(uploadPictureResult.getPicScale());
         picture.setPicFormat(uploadPictureResult.getPicFormat());
         picture.setUserId(currentUser.getId());
+        // 补充审核参数
+        this.fillReviewParams(picture, currentUser);
         // 操作数据库
         // 如果 pictureId 不为空，表示更新，否则是新增
         if (ObjectUtil.isNotEmpty(pictureId)) {
@@ -139,6 +140,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 判断图片是否存在
         checkPictureExist(pictureUpdateRequest.id(), true);
         Picture picture = PICTURE_CONVERT.mapToPicture(pictureUpdateRequest);
+        // 补充审核参数
+        this.fillReviewParams(picture, loginUser);
         boolean result = this.updateById(picture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片更新失败");
         return true;
@@ -206,8 +209,30 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     public Boolean editPicture(PictureEditRequest pictureEditRequest, User loginUser) {
         checkPermissions(loginUser, pictureEditRequest.id());
         Picture picture = PICTURE_CONVERT.mapToPicture(pictureEditRequest);
+        // 补充审核参数
+        this.fillReviewParams(picture, loginUser);
         boolean result = this.updateById(picture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片编辑失败");
+        return true;
+    }
+
+    @Override
+    public Boolean doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser) {
+        // 1. 判断图片是否存在
+        Long pictureId = pictureReviewRequest.id();
+        checkPictureExist(pictureId, true);
+        // 2. 校验审核状态是否重复，不允许重复审核
+        Picture oldPicture = this.lambdaQuery()
+                .select(Picture::getReviewStatus)
+                .eq(Picture::getId, pictureId)
+                .one();
+        if (oldPicture.getReviewStatus().equals(pictureReviewRequest.reviewStatus())) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "请勿重复审核操作");
+        }
+        Picture picture = PICTURE_CONVERT.mapToPicture(pictureReviewRequest);
+        picture.setReviewTime(new Date());
+        boolean result = this.updateById(picture);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片审核操作失败");
         return true;
     }
 
@@ -247,6 +272,26 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "图片不存在");
         }
         return true;
+    }
+
+    /**
+     * 填充审核参数
+     *
+     * @param picture   图片
+     * @param loginUser 登录用户
+     */
+    @Override
+    public void fillReviewParams(Picture picture, User loginUser) {
+        if (userService.isAdmin(loginUser)) {
+            // 管理员审核，默认通过
+            picture.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+            picture.setReviewMessage("管理员审核通过");
+            picture.setReviewerId(loginUser.getId());
+            picture.setReviewTime(new Date());
+        } else {
+            // 非管理员，无论是编辑还是创建默认都是待审核
+            picture.setReviewStatus(PictureReviewStatusEnum.REVIEWING.getValue());
+        }
     }
 }
 

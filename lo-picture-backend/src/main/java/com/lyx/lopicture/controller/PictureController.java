@@ -9,10 +9,7 @@ import com.lyx.lopicture.common.ResultUtils;
 import com.lyx.lopicture.constant.UserConstant;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.exception.ThrowUtils;
-import com.lyx.lopicture.model.dto.picture.PictureEditRequest;
-import com.lyx.lopicture.model.dto.picture.PictureQueryRequest;
-import com.lyx.lopicture.model.dto.picture.PictureUpdateRequest;
-import com.lyx.lopicture.model.dto.picture.PictureUploadRequest;
+import com.lyx.lopicture.model.dto.picture.*;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.vo.PictureTagCategory;
@@ -21,6 +18,7 @@ import com.lyx.lopicture.service.PictureService;
 import com.lyx.lopicture.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,10 +38,10 @@ public class PictureController {
     /**
      * 上传图片（可重新上传）
      */
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public BaseResponse<PictureVO> uploadPicture(
             @RequestPart("file") MultipartFile multipartFile,
-            PictureUploadRequest pictureUploadRequest,
+            @ModelAttribute PictureUploadRequest pictureUploadRequest,
             HttpServletRequest request) {
         ThrowUtils.throwIf(ObjectUtil.isAllEmpty(pictureUploadRequest, multipartFile), ErrorCode.PARAMS_ERROR);
         User loginUser = userService.getLoginUser(request);
@@ -158,6 +156,18 @@ public class PictureController {
         pictureTagCategoryBuilder.tagList(tagList);
         pictureTagCategoryBuilder.categoryList(categoryList);
         return ResultUtils.success(pictureTagCategoryBuilder.build());
+    }
+
+    /**
+     * 审核图片
+     */
+    @PostMapping("/review")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> doPictureReview(@RequestBody PictureReviewRequest pictureReviewRequest,
+                                                 HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureReviewRequest == null, ErrorCode.PARAMS_ERROR);
+        return ResultUtils.success(pictureService.doPictureReview(pictureReviewRequest,
+                userService.getLoginUser(request)));
     }
 
 }
