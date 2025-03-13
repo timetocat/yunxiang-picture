@@ -1,6 +1,11 @@
 package com.lyx.lopicture.model.dto.picture;
 
+import cn.hutool.core.util.ObjectUtil;
+import com.lyx.lopicture.common.BaseValueEnum;
 import com.lyx.lopicture.common.PageRequest;
+import com.lyx.lopicture.exception.ErrorCode;
+import com.lyx.lopicture.exception.ThrowUtils;
+import com.lyx.lopicture.model.enums.PictureReviewStatusEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -92,10 +97,25 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
     private Long reviewerId;
 
     /**
-     * 审核时间
+     * 审核时间开始
      */
-    private Date reviewTime;
+    private Date reviewTimeStart;
+
+    /**
+     * 审核时间结束
+     */
+    private Date reviewTimeEnd;
 
     @Serial
     private static final long serialVersionUID = 1L;
+
+    @Override
+    public void validate() {
+        super.validate();
+        if (ObjectUtil.isNotEmpty(reviewStatus)) {
+            PictureReviewStatusEnum pictureReviewStatusEnum = BaseValueEnum
+                    .getEnumByValue(PictureReviewStatusEnum.class, reviewStatus);
+            ThrowUtils.throwIf(pictureReviewStatusEnum == null, ErrorCode.PARAMS_ERROR, "审核状态错误");
+        }
+    }
 }

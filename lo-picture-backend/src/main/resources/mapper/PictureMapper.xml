@@ -52,6 +52,10 @@
         pic_scale,
         pic_format,
         user_id,
+        review_status,
+        review_message,
+        reviewer_id,
+        review_time,
         create_time,
         edit_time,
         update_time
@@ -63,6 +67,12 @@
             </if>
             <if test="query.userId != null">
                 AND user_id = #{query.userId}
+            </if>
+            <if test="query.reviewerId != null">
+                AND reviewer_id = #{query.reviewerId}
+            </if>
+            <if test="query.reviewStatus != null">
+                AND review_status = #{query.reviewStatus}
             </if>
             <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.category)">
                 AND `category` = #{query.category}
@@ -92,9 +102,15 @@
             <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.picFormat)">
                 AND pic_format LIKE CONCAT('%', #{query.picFormat}, '%')
             </if>
+            <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.reviewMessage)">
+                AND review_message LIKE CONCAT('%', #{query.reviewMessage}, '%')
+            </if>
             <if test="@cn.hutool.core.collection.CollUtil@isNotEmpty(query.tags)">
                 <bind name="tagsJson" value="@cn.hutool.json.JSONUtil@toJsonStr(query.tags)"/>
                 AND JSON_CONTAINS(tags, #{tagsJson}, '$')
+            </if>
+            <if test="query.reviewTimeStart != null and query.reviewTimeEnd != null">
+                AND (review_time BETWEEN #{query.reviewTimeStart} AND #{query.reviewTimeEnd})
             </if>
         </where>
         <if test="query.sortFieldPairs != null and query.sortFieldPairs.size() > 0">
