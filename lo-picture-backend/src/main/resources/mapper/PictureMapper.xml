@@ -7,6 +7,7 @@
     <resultMap id="BaseResultMap" type="com.lyx.lopicture.model.entity.Picture">
         <id property="id" column="id" jdbcType="BIGINT"/>
         <result property="url" column="url" jdbcType="VARCHAR"/>
+        <result property="thumbnailUrl" column="thumbnail_url" jdbcType="VARCHAR"/>
         <result property="name" column="name" jdbcType="VARCHAR"/>
         <result property="introduction" column="introduction" jdbcType="VARCHAR"/>
         <result property="category" column="category" jdbcType="VARCHAR"/>
@@ -29,7 +30,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,url,`name`,
+        id,url,thumbnail_url,`name`,
         introduction,`category`,tags,
         pic_size,pic_width,pic_height,
         pic_scale,pic_format,user_id,
@@ -42,6 +43,7 @@
         SELECT
         id,
         url,
+        thumbnail_url,
         `name`,
         introduction,
         `category`,

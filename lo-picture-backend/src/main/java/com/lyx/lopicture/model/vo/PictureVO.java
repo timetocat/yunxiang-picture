@@ -10,6 +10,7 @@ import java.util.List;
  *
  * @param id           主键id
  * @param url          图片url
+ * @param thumbnailUrl 缩略图url
  * @param name         图片名称
  * @param introduction 简介
  * @param tags         标签
@@ -28,6 +29,7 @@ import java.util.List;
 public record PictureVO(
         Long id,
         String url,
+        String thumbnailUrl,
         String name,
         String introduction,
         List<String> tags,
