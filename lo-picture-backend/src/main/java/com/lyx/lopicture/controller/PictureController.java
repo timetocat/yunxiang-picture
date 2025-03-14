@@ -1,6 +1,10 @@
 package com.lyx.lopicture.controller;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RandomUtil;
+import com.alicp.jetcache.anno.CacheRefresh;
+import com.alicp.jetcache.anno.CacheType;
+import com.alicp.jetcache.anno.Cached;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lyx.lopicture.annotation.AuthCheck;
 import com.lyx.lopicture.common.BaseResponse;
@@ -24,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -126,9 +131,15 @@ public class PictureController {
     /**
      * 分页获取图片列表（封装类）
      */
+    @Cached(name = ":picture:listPageVo:", cacheType = CacheType.BOTH, cacheNullValue = true,
+            localExpire = 240, expire = 300,
+            key = "#pictureQueryRequest.id != null ? #pictureQueryRequest.id : " +
+                    "T(com.lyx.lopicture.utils.KeyGenerateUtils).redisKey(#pictureQueryRequest)")
+//    @CacheRefresh(refresh = 60, timeUnit = TimeUnit.SECONDS)
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<PictureVO>> listPictureVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest,
                                                              HttpServletRequest request) {
+        ;
         long size = pictureQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);

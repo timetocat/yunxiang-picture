@@ -30,6 +30,34 @@ spring:
 #    timeout: 5000
 #    password: 123456
 
+# 二级缓存
+#jetcache:
+#  statIntervalMinutes: 15
+#  areaInCacheName: false
+#  local:
+#    default:
+#      type: caffeine
+#      #      limit: 100
+#      keyConvertor: jackson #其他可选：fastjson/jackson
+#  #      expireAfterWriteInMillis: 100000
+#  remote:
+#    default:
+#      type: redis
+#      keyConvertor: jackson #其他可选：fastjson/jackson
+#      broadcastChannel: ${spring.application.name} # 广播频道名称设置为Spring应用程序名称
+#      keyPrefix: ${spring.application.name}         # 键前缀设置为Spring应用程序名称
+#      valueEncoder: java #其他可选：kryo/kryo5
+#      valueDecoder: java #其他可选：kryo/kryo5
+#      poolConfig:
+#        minIdle: 5
+#        maxIdle: 20
+#        maxTotal: 50
+#      host: ${spring.redis.host}
+#      port: ${spring.redis.port}
+#      password: ${spring.redis.password}
+#      database: 2
+#      defaultExpireInMillis: 5000  # 设置默认过期时间为5000毫秒（5秒）
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
