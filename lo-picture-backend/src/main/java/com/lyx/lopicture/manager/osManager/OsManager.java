@@ -132,7 +132,7 @@ public interface OsManager {
      * @param key
      * @return
      */
-    static String getThumbnailKey(String key) {
+    default String getThumbnailKey(String key) {
         return FileUtil.mainName(key) + "_thumbnail." + FileUtil.getSuffix(key);
     }
 

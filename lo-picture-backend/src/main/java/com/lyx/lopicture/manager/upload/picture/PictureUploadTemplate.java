@@ -33,7 +33,7 @@ public abstract class PictureUploadTemplate {
         // 自己拼接文件上传路径，而不是使用原始文件名称，可以增强安全性
         String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid,
                 FileUtil.getSuffix(originalFilename));
-        String uploadPath = String.format("/%s/%s", uploadPathPrefix, uploadFilename);
+        String uploadPath = String.format("%s/%s", uploadPathPrefix, uploadFilename);
         return osManager.uploadPicture(inputSource, uploadPath, originalFilename);
     }
 

@@ -2,6 +2,7 @@ package com.lyx.lopicture.manager.osManager;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.NumberUtil;
 import com.lyx.lopicture.config.MinioConfig;
 import com.lyx.lopicture.exception.BusinessException;
@@ -67,12 +68,12 @@ public class MinioManager implements OsManager {
         ByteArrayOutputStream thumbnailOutputStream = null;
         ByteArrayOutputStream originOutputStream = new ByteArrayOutputStream();
         try (InputStream inputStream = new FileInputStream(file);
-                InputStream originInputStream = new FileInputStream(file)) {
+             InputStream originInputStream = new FileInputStream(file)) {
             if (file.length() > USE_THUMBNAIL_SIZE) {
                 thumbnailOutputStream = new ByteArrayOutputStream();
                 processPicture(inputStream, 0.25, osFormat, thumbnailOutputStream);
                 // 拼接缩略图的路径
-                String thumbnailKey = String.format("%s.%s", OsManager.getThumbnailKey(key), osFormat);
+                String thumbnailKey = getThumbnailKey(key);
                 putObject(thumbnailKey, IoUtil.toStream(thumbnailOutputStream.toByteArray()),
                         thumbnailOutputStream.size(), String.format("image/%s", osFormat));
             }
@@ -99,7 +100,7 @@ public class MinioManager implements OsManager {
                 thumbnailOutputStream = new ByteArrayOutputStream();
                 processPicture(file.getInputStream(), 0.25, FileUtil.getSuffix(key), thumbnailOutputStream);
                 // 拼接缩略图的路径
-                String thumbnailKey = OsManager.getThumbnailKey(key);
+                String thumbnailKey = getThumbnailKey(key);
                 putObject(thumbnailKey, IoUtil.toStream(thumbnailOutputStream.toByteArray()),
                         thumbnailOutputStream.size(), file.getContentType());
             }
@@ -197,10 +198,11 @@ public class MinioManager implements OsManager {
     @Override
     public void deleteObject(String key) {
         try {
+            String prefix = minioConfig.getEndpoint() + "/" + minioConfig.getBucketName() + "/";
             minioClient.removeObject(RemoveObjectArgs
                     .builder()
                     .bucket(minioConfig.getBucketName())
-                    .object(key)
+                    .object(!key.startsWith(prefix) ? key : CharSequenceUtil.removePrefix(key, prefix))
                     .build());
         } catch (Exception e) {
             log.error("文件删除失败", e);
@@ -229,7 +231,7 @@ public class MinioManager implements OsManager {
             UploadPictureResult uploadPictureResult = new UploadPictureResult();
             String webpFilename = getWebpKey(key);
             uploadPictureResult.setUrl(getPictureUrl(webpFilename));
-            String thumbnailKey = OsManager.getThumbnailKey(key);
+            String thumbnailKey = getThumbnailKey(key);
             if (validateKey(thumbnailKey, true)) {
                 uploadPictureResult.setThumbnailUrl(getPictureUrl(thumbnailKey));
             }
@@ -248,6 +250,18 @@ public class MinioManager implements OsManager {
             IoUtil.close(outputStream);
         }
     }
+
+    /**
+     * 获取缩略图key
+     *
+     * @param key
+     * @return
+     */
+    @Override
+    public String getThumbnailKey(String key) {
+        return getFilePrefixName(key) + "_thumbnail." + osFormat;
+    }
+
 
     /**
      * 校验对象 key 是否存在
@@ -321,7 +335,13 @@ public class MinioManager implements OsManager {
 
     @NotNull
     private static String getWebpKey(String key) {
-        return FileUtil.mainName(key) + ".webp";
+        return getFilePrefixName(key) + ".webp";
+    }
+
+    @NotNull
+    private static String getFilePrefixName(String key) {
+        return CharSequenceUtil.subBefore(key, FileUtil.getName(key), true)
+                + FileUtil.mainName(key);
     }
 
 }

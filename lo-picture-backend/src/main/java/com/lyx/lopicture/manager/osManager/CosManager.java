@@ -2,6 +2,7 @@ package com.lyx.lopicture.manager.osManager;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.NumberUtil;
 import com.lyx.lopicture.config.CosClientConfig;
 import com.lyx.lopicture.exception.BusinessException;
@@ -71,7 +72,7 @@ public class CosManager implements OsManager {
         if (file.length() > USE_THUMBNAIL_SIZE) {
             PicOperations.Rule thumbnailRule = new PicOperations.Rule();
             // 拼接缩略图的路径
-            String thumbnailKey = OsManager.getThumbnailKey(key);
+            String thumbnailKey = getThumbnailKey(key);
             thumbnailRule.setFileId(thumbnailKey);
             thumbnailRule.setBucket(cosClientConfig.getBucket());
             // 缩放规则 /thumbnail/<Width>x<Height>>（如果大于原图宽高，则不处理）
@@ -182,7 +183,9 @@ public class CosManager implements OsManager {
      */
     @Override
     public void deleteObject(String key) {
-        cosClient.deleteObject(cosClientConfig.getBucket(), key);
+        String prefix = cosClientConfig.getHost() + "/";
+        cosClient.deleteObject(cosClientConfig.getBucket(),
+                !key.startsWith(prefix) ? key : CharSequenceUtil.removePrefix(key, prefix));
     }
 
     /**
