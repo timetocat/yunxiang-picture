@@ -7,9 +7,11 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lyx.lopicture.common.ResultUtils;
 import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.exception.ThrowUtils;
+import com.lyx.lopicture.manager.osManager.OsManager;
 import com.lyx.lopicture.manager.upload.picture.FilePictureUpload;
 import com.lyx.lopicture.manager.upload.picture.PictureUploadTemplate;
 import com.lyx.lopicture.manager.upload.picture.UrlPictureUpload;
@@ -29,6 +31,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -60,6 +63,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private UrlPictureUpload urlPictureUpload;
+
+    @Resource
+    private OsManager osManager;
 
     /**
      * 上传图片
@@ -137,6 +143,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         checkPermissions(loginUser, id);
         boolean result = this.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片删除失败");
+        // 清理图片资源
+        this.clearPictureFile(id);
         return true;
     }
 
@@ -250,6 +258,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     /**
      * 上传图片（批量）
+     *
      * @param pictureUploadByBatchRequest
      * @param loginUser
      * @return
@@ -311,6 +320,36 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
         }
         return uploadCount;
+    }
+
+    /**
+     * 清理图片文件
+     *
+     *
+     * @param id 主键id
+     */
+    @Async
+    @Override
+    public void clearPictureFile(Long id) {
+        Picture picture = this.baseMapper.getDeletePictureById(id);
+        String url = picture.getUrl();
+        Long count = this.lambdaQuery()
+                .eq(Picture::getUrl, url)
+                .count();
+        // 有不止一条记录用到了该图片，不清理
+        if (count > 0) return;
+        // 删除图片
+        try {
+            osManager.deleteObject(url);
+            // 删除缩略图
+            String thumbnailUrl = picture.getThumbnailUrl();
+            if (CharSequenceUtil.isNotBlank(thumbnailUrl)) {
+                osManager.deleteObject(thumbnailUrl);
+            }
+        } catch (Exception e) {
+            // 可以清理失败，对象存储有兜底策略
+            log.info("图片清理失败", e);
+        }
     }
 
     /**

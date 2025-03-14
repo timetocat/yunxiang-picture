@@ -130,4 +130,10 @@
             </foreach>
         </if>
     </select>
+    <select id="getDeletePictureById" resultMap="BaseResultMap"><!--resultType="com.lyx.lopicture.model.entity.Picture">-->
+        SELECT url,
+               thumbnail_url
+        FROM picture
+        where id = #{id}
+    </select>
 </mapper>

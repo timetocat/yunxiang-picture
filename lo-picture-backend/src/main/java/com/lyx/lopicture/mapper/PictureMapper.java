@@ -16,6 +16,8 @@ public interface PictureMapper extends BaseMapper<Picture> {
 
     Page<Picture> selectPage(Page<Picture> page, @Param("query") PictureQueryRequest pictureQueryRequest);
 
+    Picture getDeletePictureById(@Param("id") Long id);
+
 }
 
 
