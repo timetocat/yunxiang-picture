@@ -72,6 +72,9 @@
             <if test="query.userId != null">
                 AND user_id = #{query.userId}
             </if>
+            <if test="query.spaceId != null">
+                AND space_id = #{query.spaceId}
+            </if>
             <if test="query.reviewerId != null">
                 AND reviewer_id = #{query.reviewerId}
             </if>
@@ -115,6 +118,9 @@
             </if>
             <if test="query.reviewTimeStart != null and query.reviewTimeEnd != null">
                 AND (review_time BETWEEN #{query.reviewTimeStart} AND #{query.reviewTimeEnd})
+            </if>
+            <if test="query.nullSpaceId">
+                AND space_id IS NULL
             </if>
         </where>
         <if test="query.sortFieldPairs != null and query.sortFieldPairs.size() > 0">

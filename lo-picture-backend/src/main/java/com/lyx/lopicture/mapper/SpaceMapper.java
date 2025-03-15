@@ -16,6 +16,16 @@ public interface SpaceMapper extends BaseMapper<Space> {
 
     Page<Space> selectPage(Page<Space> page, @Param("query") SpaceQueryRequest spaceQueryRequest);
 
+    /**
+     * 检查空间容量
+     *
+     * @param id 主键id
+     * @return
+     */
+    int checkSpaceCapacity(@Param("id") Long id);
+
+    boolean updateSpaceCapacity(@Param("id") Long id, @Param("size") Long size);
+
 }
 
 

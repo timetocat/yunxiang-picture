@@ -36,7 +36,7 @@ public record SpaceUpdateRequest(
         ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR);
         ThrowUtils.throwIf(CharSequenceUtil.isNotBlank(spaceName) && spaceName.length() > 25,
                 ErrorCode.PARAMS_ERROR, "空间名称过长");
-        if (ObjectUtil.isEmpty(this.spaceLevel)) return;
+        if (ObjectUtil.isNull(this.spaceLevel)) return;
         SpaceLevel spaceLevel = SpaceLevelEnum.getSpaceLevelInfo(this.spaceLevel);
         ThrowUtils.throwIf(spaceLevel == null, ErrorCode.PARAMS_ERROR, "空间级别错误");
     }

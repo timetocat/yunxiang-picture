@@ -122,7 +122,7 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
     @Override
     public void validate() {
         super.validate();
-        if (ObjectUtil.isNotEmpty(reviewStatus)) {
+        if (ObjectUtil.isNotNull(reviewStatus)) {
             PictureReviewStatusEnum pictureReviewStatusEnum = BaseValueEnum
                     .getEnumByValue(PictureReviewStatusEnum.class, reviewStatus);
             ThrowUtils.throwIf(pictureReviewStatusEnum == null, ErrorCode.PARAMS_ERROR, "审核状态错误");

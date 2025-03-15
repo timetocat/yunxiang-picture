@@ -167,13 +167,13 @@ public class PostServiceImpl extends ServiceImpl<PostMapper, Post>
                 }
             }
             Long notId = postQueryRequest.getNotId();
-            queryWrapper.ne(ObjectUtil.isNotEmpty(notId), Post::getId, notId);
+            queryWrapper.ne(ObjectUtil.isNotNull(notId), Post::getId, notId);
             Long id = postQueryRequest.getId();
-            queryWrapper.eq(ObjectUtil.isNotEmpty(id), Post::getId, id);
+            queryWrapper.eq(ObjectUtil.isNotNull(id), Post::getId, id);
             Long userId = postQueryRequest.getUserId();
 /*            String sortField = postQueryRequest.getSortFieldPairs().get(0).getSortField();
             String sortOrder = postQueryRequest.getSortFieldPairs().get(0).getSortOrder();
-            queryWrapper.eq(ObjectUtil.isNotEmpty(userId), Post::getUserId, userId);
+            queryWrapper.eq(ObjectUtil.isNotNull(userId), Post::getUserId, userId);
             queryWrapper.apply(SqlUtils.validSortField(sortField), "ORDER BY {} {}", sortField,
                     CommonConstant.SORT_ORDER_ASC.equals(sortOrder) ? "ASC" : "DESC");*/
         }

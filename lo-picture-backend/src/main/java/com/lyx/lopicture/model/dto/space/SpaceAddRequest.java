@@ -28,7 +28,7 @@ public record SpaceAddRequest(
     @Override
     public void validate() {
         ThrowUtils.throwIf(CharSequenceUtil.isBlank(spaceName), ErrorCode.PARAMS_ERROR, "空间名称不能为空");
-        ThrowUtils.throwIf(ObjectUtil.isEmpty(this.spaceLevel), ErrorCode.PARAMS_ERROR, "空间级别不能为空");
+        ThrowUtils.throwIf(ObjectUtil.isNull(this.spaceLevel), ErrorCode.PARAMS_ERROR, "空间级别不能为空");
         ThrowUtils.throwIf(spaceName.length() > 25, ErrorCode.PARAMS_ERROR, "空间名称过长");
         SpaceLevel spaceLevel = SpaceLevelEnum.getSpaceLevelInfo(this.spaceLevel);
         ThrowUtils.throwIf(spaceLevel == null, ErrorCode.PARAMS_ERROR, "空间级别错误");

@@ -82,6 +82,32 @@ public interface SpaceService extends IService<Space> {
     Boolean editSpace(SpaceEditRequest spaceEditRequest, User loginUser);
 
     /**
+     * 判断空间是属于用户
+     *
+     * @param id        主键id
+     * @param loginUser 登录用户
+     * @return true：是，false：否
+     */
+    Boolean checkSpaceExistByUser(Long id, User loginUser);
+
+    /**
+     * 检测空间额度
+     *
+     * @param id 主键id
+     * @return
+     */
+    String checkSpaceCapacity(Long id);
+
+    /**
+     * 更新空间额度
+     *
+     * @param id
+     * @param size
+     * @return
+     */
+    Boolean updateSpaceCapacity(Long id, Long size);
+
+    /**
      * 判断空间是否存在
      *
      * @param id      主键id

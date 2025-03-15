@@ -1,8 +1,6 @@
 package com.lyx.lopicture.controller;
 
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.RandomUtil;
-import com.alicp.jetcache.anno.CacheRefresh;
 import com.alicp.jetcache.anno.CacheType;
 import com.alicp.jetcache.anno.Cached;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -16,9 +14,11 @@ import com.lyx.lopicture.exception.ThrowUtils;
 import com.lyx.lopicture.model.dto.picture.*;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.entity.User;
+import com.lyx.lopicture.model.enums.PictureReviewStatusEnum;
 import com.lyx.lopicture.model.vo.PictureTagCategory;
 import com.lyx.lopicture.model.vo.PictureVO;
 import com.lyx.lopicture.service.PictureService;
+import com.lyx.lopicture.service.SpaceService;
 import com.lyx.lopicture.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -39,6 +38,8 @@ public class PictureController {
     private final UserService userService;
 
     private final PictureService pictureService;
+
+    private final SpaceService spaceService;
 
     /**
      * 上传图片（可重新上传）
@@ -61,7 +62,7 @@ public class PictureController {
     public BaseResponse<PictureVO> uploadPictureByUrl(
             @RequestBody PictureUploadRequest pictureUploadRequest,
             HttpServletRequest request) {
-        ThrowUtils.throwIf(ObjectUtil.isEmpty(pictureUploadRequest), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(pictureUploadRequest == null, ErrorCode.PARAMS_ERROR);
         User loginUser = userService.getLoginUser(request);
         String fileUrl = pictureUploadRequest.fileUrl();
         PictureVO pictureVO = pictureService.uploadPicture(fileUrl, pictureUploadRequest, loginUser);
@@ -114,6 +115,11 @@ public class PictureController {
         // 查询数据库
         Picture picture = pictureService.getById(id);
         ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
+        Long spaceId = picture.getSpaceId();
+        if (spaceId != null) {
+            ThrowUtils.throwIf(!spaceService.checkSpaceExistByUser(spaceId, userService.getLoginUser(request)),
+                    ErrorCode.NO_AUTH_ERROR, "空间不存在或无权限");
+        }
         // 获取封装类
         return ResultUtils.success(pictureService.getPictureVO(picture, request));
     }
@@ -131,14 +137,41 @@ public class PictureController {
     /**
      * 分页获取图片列表（封装类）
      */
+    @PostMapping("/list/page/vo")
+    public BaseResponse<Page<PictureVO>> listPictureVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest,
+                                                             HttpServletRequest request) {
+        long size = pictureQueryRequest.getPageSize();
+        // 限制爬虫
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        // 空间权限校验
+        Long spaceId = pictureQueryRequest.getSpaceId();
+        if (ObjectUtil.isNull(spaceId)) {
+            // 公开图库
+            // 普通用户默认只能看到审核通过的数据
+            pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+            pictureQueryRequest.setNullSpaceId(true);
+        } else {
+            // 私有空间
+            ThrowUtils.throwIf(!spaceService.checkSpaceExistByUser(spaceId, userService.getLoginUser(request)),
+                    ErrorCode.NO_AUTH_ERROR, "空间不存在或无权限");
+        }
+        Page<Picture> picturePage = pictureService.getPicturePage(pictureQueryRequest);
+        // 获取封装类
+        return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
+    }
+
+    /**
+     * 分页获取图片列表（封装类, 有缓存）
+     */
     @Cached(name = ":picture:listPageVo:", cacheType = CacheType.BOTH, cacheNullValue = true,
             localExpire = 240, expire = 300,
             key = "#pictureQueryRequest.id != null ? #pictureQueryRequest.id : " +
                     "T(com.lyx.lopicture.utils.KeyGenerateUtils).redisKey(#pictureQueryRequest)")
 //    @CacheRefresh(refresh = 60, timeUnit = TimeUnit.SECONDS)
-    @PostMapping("/list/page/vo")
-    public BaseResponse<Page<PictureVO>> listPictureVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest,
-                                                             HttpServletRequest request) {
+    @Deprecated
+    @PostMapping("/list/page/vo/cache")
+    public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest,
+                                                                      HttpServletRequest request) {
         long size = pictureQueryRequest.getPageSize();
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);

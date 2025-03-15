@@ -133,7 +133,7 @@ public class Picture implements Serializable {
     /**
      * 编辑时间
      */
-    @TableField(value = "edit_time")
+    @TableField(value = "edit_time", updateStrategy = FieldStrategy.NOT_NULL)
     private Date editTime = new Date();
 
     /**

@@ -199,6 +199,43 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         return true;
     }
 
+    /**
+     * 判断空间是属于用户
+     *
+     * @param id        主键id
+     * @param loginUser 登录用户
+     * @return true：是，false：否
+     */
+    @Override
+    public Boolean checkSpaceExistByUser(Long id, User loginUser) {
+        return this.lambdaQuery()
+                .eq(Space::getUserId, loginUser.getId())
+                .eq(Space::getId, id)
+                .exists();
+    }
+
+    /**
+     * 检测空间额度（逻辑比较简单，有待更改）
+     *
+     * @param id 主键id
+     * @return
+     */
+    @Override
+    public String checkSpaceCapacity(Long id) {
+        int result = this.baseMapper.checkSpaceCapacity(id);
+        return switch (result) {
+            case 0 -> "OK";
+            case 1 -> "空间条数不足";
+            case 2 -> "空间容量不足";
+            default -> null;
+        };
+    }
+
+    @Override
+    public Boolean updateSpaceCapacity(Long id, Long size) {
+        return this.baseMapper.updateSpaceCapacity(id, size);
+    }
+
 
     /**
      * 判断空间是否存在
@@ -230,11 +267,11 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         SpaceLevel spaceLevel = SpaceLevelEnum.getSpaceLevelInfo(space.getSpaceLevel());
         if (spaceLevel != null) {
             long maxCount = spaceLevel.getMaxCount();
-            if (ObjectUtil.isEmpty(space.getMaxCount())) {
+            if (ObjectUtil.isNull(space.getMaxCount())) {
                 space.setMaxCount(maxCount);
             }
             long maxSize = spaceLevel.getMaxSize();
-            if (ObjectUtil.isEmpty(space.getMaxSize())) {
+            if (ObjectUtil.isNull(space.getMaxSize())) {
                 space.setMaxSize(maxSize);
             }
         }
