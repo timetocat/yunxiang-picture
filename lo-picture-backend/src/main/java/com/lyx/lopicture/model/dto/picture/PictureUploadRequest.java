@@ -10,17 +10,19 @@ import java.util.List;
 /**
  * 图片上传请求
  *
- * @param id      图片id（用于修改）
- * @param fileUrl 文件地址
- * @param picName 图片名称
+ * @param id       图片id（用于修改）
+ * @param fileUrl  文件地址
+ * @param picName  图片名称
+ * @param spaceId  空间id
  * @param category 分类
- * @param tags 标签
+ * @param tags     标签
  */
 @Builder
 public record PictureUploadRequest(
         Long id,
         String fileUrl,
         String picName,
+        Long spaceId,
         String category,
         List<String> tags
 ) implements Serializable, Validator {

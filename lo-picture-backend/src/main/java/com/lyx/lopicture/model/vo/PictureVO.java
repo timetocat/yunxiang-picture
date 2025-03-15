@@ -21,6 +21,7 @@ import java.util.List;
  * @param picScale     图片比例
  * @param picFormat    图片格式
  * @param userId       用户id
+ * @param spaceId      空间id
  * @param createTime   创建时间
  * @param editTime     编辑时间
  * @param updateTime   更新时间
@@ -40,6 +41,7 @@ public record PictureVO(
         Double picScale,
         String picFormat,
         Long userId,
+        Long spaceId,
         Date createTime,
         Date editTime,
         Date updateTime,
