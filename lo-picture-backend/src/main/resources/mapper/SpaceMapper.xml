@@ -25,4 +25,50 @@
         total_count,user_id,create_time,
         edit_time,update_time,is_delete
     </sql>
+
+    <select id="selectPage" resultMap="BaseResultMap"><!--resultType="com.lyx.lopicture.model.entity.Space">-->
+        SELECT
+        id,
+        space_name,
+        space_level,
+        max_size,
+        max_count,
+        total_size,
+        total_count,
+        user_id,
+        create_time,
+        edit_time,
+        update_time
+        FROM space
+        <where>
+            is_delete = 0
+            <if test="query.id != null">
+                AND id = #{query.id}
+            </if>
+            <if test="query.userId != null">
+                AND user_id = #{query.userId}
+            </if>
+            <if test="query.spaceLevel != null">
+                AND space_level = #{query.spaceLevel}
+            </if>
+            <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.spaceName)">
+                AND space_name LIKE CONCAT('%', #{query.spaceName}, '%')
+            </if>
+        </where>
+        <if test="@cn.hutool.core.collection.CollUtil@isNotEmpty(query.sortFieldPairs)">
+            <foreach collection="query.sortFieldPairs" item="sortField" open="ORDER BY" separator="," close="">
+                ${sortField.sortField}
+                <choose>
+                    <when test="sortField.sortOrder != null and sortField.sortOrder != ''
+                        and sortField.sortOrder == 'ascend' ">
+                        ASC
+                    </when>
+                    <otherwise>
+                        DESC
+                    </otherwise>
+                </choose>
+            </foreach>
+        </if>
+    </select>
+
 </mapper>
