@@ -5,6 +5,7 @@ import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lyx.lopicture.api.imagesearch.ImageSearchApiFacade;
@@ -28,6 +29,7 @@ import com.lyx.lopicture.model.vo.UserVO;
 import com.lyx.lopicture.service.PictureService;
 import com.lyx.lopicture.service.SpaceService;
 import com.lyx.lopicture.service.UserService;
+import com.lyx.lopicture.utils.PictureUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -40,11 +42,10 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.awt.*;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -143,6 +144,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         picture.setUserId(currentUser.getId());
         picture.setCategory(pictureUploadRequest.category());
         picture.setTags(pictureUploadRequest.tags());
+        picture.setPicColor(uploadPictureResult.getPicColor());
         // 补充审核参数
         this.fillReviewParams(picture, currentUser);
         // 操作数据库
@@ -160,8 +162,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
             return null;
         });
-        return PICTURE_CONVERT.mapToPictureVO(picture,
-                userService.getUserVO(userService.getById(picture.getUserId())));
+        return PICTURE_CONVERT.mapToPictureVO(picture, null);
     }
 
     /**
@@ -370,6 +371,54 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 .eq(Picture::getId, pictureId)
                 .one();
         return ImageSearchApiFacade.searchImage(osManager.processPictureFormat(picture.getUrl()), isIntranet);
+    }
+
+    /**
+     * 以颜色搜图
+     *
+     * @param searchPictureByColorRequest 以颜色搜图请求
+     * @param loginUser                   登录用户
+     * @return 图片视图对象列表
+     */
+    @Override
+    public List<PictureVO> searchPictureByColor(SearchPictureByColorRequest searchPictureByColorRequest, User loginUser) {
+        Long spaceId = searchPictureByColorRequest.spaceId();
+        String picColor = searchPictureByColorRequest.picColor();
+        boolean isPrivateSpace = ObjectUtil.isNotNull(spaceId);
+        // 1. 校验空间权限
+        ThrowUtils.throwIf(isPrivateSpace && !spaceService.checkSpaceExistByUser(spaceId, loginUser),
+                ErrorCode.NO_AUTH_ERROR, "空间不存在或无权限");
+        // 2. 查询该空间下的所有图片
+        LambdaQueryChainWrapper<Picture> queryChainWrapper = this.lambdaQuery()
+                .isNotNull(Picture::getPicColor);
+        if (isPrivateSpace) {
+            queryChainWrapper = queryChainWrapper
+                    .eq(Picture::getSpaceId, spaceId);
+        } else { // 显示指定 is null 是因为 mysql8 会走索引
+            queryChainWrapper = queryChainWrapper
+                    .isNull(Picture::getSpaceId);
+        }
+        Page<Picture> page = queryChainWrapper
+                .page(new Page<>(1, 512));
+        if (page.getTotal() == 0) {
+            return Collections.emptyList();
+        }
+        List<Picture> pictureList = page.getRecords();
+        // 将颜色字符串转换为主色调
+        Color targetColor = Color.decode(picColor);
+        // 3. 计算相似度并排序并返回结果
+        return pictureList.stream()
+                .sorted(Comparator.comparingDouble(picture -> {
+                    String hexColor = picture.getPicColor();
+                    // 没有主色调的图片默认排序到最后
+                    if (CharSequenceUtil.isBlank(hexColor)) {
+                        return Double.MAX_VALUE;
+                    }
+                    return -PictureUtils.calculateSimilarity(targetColor, Color.decode(hexColor));
+                }))
+                .limit(12)
+                .map(picture -> PICTURE_CONVERT.mapToPictureVO(picture, null))
+                .collect(Collectors.toList());
     }
 
     /**

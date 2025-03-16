@@ -236,4 +236,13 @@ public class PictureController {
         return ResultUtils.success(pictureService.searchPictureByPicture(searchPictureByPictureRequest));
     }
 
+    /**
+     * 按照颜色搜索
+     */
+    @PostMapping("/search/color")
+    public BaseResponse<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(searchPictureByColorRequest == null, ErrorCode.PARAMS_ERROR);
+        return ResultUtils.success(pictureService.searchPictureByColor(searchPictureByColorRequest, userService.getLoginUser(request)));
+    }
+
 }

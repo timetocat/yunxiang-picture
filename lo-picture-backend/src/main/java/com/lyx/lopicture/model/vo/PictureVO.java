@@ -20,6 +20,7 @@ import java.util.List;
  * @param picHeight    图片高度
  * @param picScale     图片比例
  * @param picFormat    图片格式
+ * @param picColor     图片主色调
  * @param userId       用户id
  * @param spaceId      空间id
  * @param createTime   创建时间
@@ -40,6 +41,7 @@ public record PictureVO(
         Integer picHeight,
         Double picScale,
         String picFormat,
+        String picColor,
         Long userId,
         Long spaceId,
         Date createTime,

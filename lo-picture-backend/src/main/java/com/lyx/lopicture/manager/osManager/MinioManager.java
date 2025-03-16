@@ -9,6 +9,7 @@ import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.manager.osManager.operator.PutOperator;
 import com.lyx.lopicture.model.dto.file.UploadPictureResult;
+import com.lyx.lopicture.utils.PictureUtils;
 import io.minio.*;
 import io.minio.errors.*;
 import lombok.extern.slf4j.Slf4j;
@@ -241,6 +242,11 @@ public class MinioManager implements OsManager {
             uploadPictureResult.setPicHeight(picHeight);
             uploadPictureResult.setPicScale(picScale);
             uploadPictureResult.setPicFormat(FileUtil.extName(webpFilename));
+            try {
+                uploadPictureResult.setPicColor(PictureUtils.getRGB(bufferedImage));
+            } catch (IOException e) {
+                log.error("获取图片颜色失败！", e);
+            }
             // 返回可访问的地址
             return uploadPictureResult;
         } catch (Exception e) {

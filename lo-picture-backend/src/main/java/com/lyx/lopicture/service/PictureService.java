@@ -103,10 +103,20 @@ public interface PictureService extends IService<Picture> {
 
     /**
      * 以图搜图
+     *
      * @param searchPictureByPictureRequest 以图搜图请求
      * @return
      */
     List<ImageSearchResult> searchPictureByPicture(SearchPictureByPictureRequest searchPictureByPictureRequest);
+
+    /**
+     * 以颜色搜图
+     *
+     * @param searchPictureByColorRequest 以颜色搜图请求
+     * @param loginUser                   登录用户
+     * @return 图片视图对象列表
+     */
+    List<PictureVO> searchPictureByColor(SearchPictureByColorRequest searchPictureByColorRequest, User loginUser);
 
     /**
      * 清理图片文件

@@ -89,6 +89,12 @@ public class Picture implements Serializable {
     private String picFormat;
 
     /**
+     * 图片主色调
+     */
+    @TableField(value = "pic_color")
+    private String picColor;
+
+    /**
      * 创建用户 id
      */
     @TableField(value = "user_id")
