@@ -21,6 +21,7 @@ import com.qcloud.cos.model.ciModel.persistence.PicOperations;
 import com.qcloud.cos.model.ciModel.persistence.ProcessResults;
 import com.qcloud.cos.utils.IOUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,9 @@ import java.util.List;
 @ConditionalOnBean(COSClient.class)
 @ConditionalOnProperty(name = "default.enable-os", havingValue = "true")
 public class CosManager implements OsManager {
+
+    @Value("${default.os-format:png}")
+    private String osFormat;
 
     @Resource
     private COSClient cosClient;
@@ -226,6 +230,17 @@ public class CosManager implements OsManager {
                 this.deleteTempFile((File) inputSource);
             }
         }
+    }
+
+    /**
+     * 处理图片格式 （一般看对象存储官网有没有转换的可拼接的url）
+     *
+     * @param url 图片url
+     * @return 处理后的图片url
+     */
+    @Override
+    public String processPictureFormat(String url) {
+        return url + "?imageMogr2/format/" + osFormat;
     }
 
     /**

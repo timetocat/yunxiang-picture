@@ -1,12 +1,12 @@
 package com.lyx.lopicture.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.lyx.lopicture.model.dto.space.SpaceAddRequest;
 import com.lyx.lopicture.model.dto.space.SpaceEditRequest;
 import com.lyx.lopicture.model.dto.space.SpaceQueryRequest;
 import com.lyx.lopicture.model.dto.space.SpaceUpdateRequest;
 import com.lyx.lopicture.model.entity.Space;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.vo.SpaceVO;
 

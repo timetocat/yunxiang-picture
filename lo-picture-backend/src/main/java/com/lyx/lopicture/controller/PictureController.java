@@ -5,6 +5,7 @@ import com.alicp.jetcache.anno.CacheType;
 import com.alicp.jetcache.anno.Cached;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lyx.lopicture.annotation.AuthCheck;
+import com.lyx.lopicture.api.imagesearch.model.ImageSearchResult;
 import com.lyx.lopicture.common.BaseResponse;
 import com.lyx.lopicture.common.DeleteRequest;
 import com.lyx.lopicture.common.ResultUtils;
@@ -223,6 +224,16 @@ public class PictureController {
         ThrowUtils.throwIf(pictureUploadByBatchRequest == null, ErrorCode.PARAMS_ERROR);
         return ResultUtils.success(pictureService.uploadPictureByBatch(pictureUploadByBatchRequest,
                 userService.getLoginUser(request)));
+    }
+
+    /**
+     * 以图搜图
+     */
+    @PostMapping("/search/picture")
+    public BaseResponse<List<ImageSearchResult>> searchPictureByPicture
+    (@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest) {
+        ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAMS_ERROR);
+        return ResultUtils.success(pictureService.searchPictureByPicture(searchPictureByPictureRequest));
     }
 
 }

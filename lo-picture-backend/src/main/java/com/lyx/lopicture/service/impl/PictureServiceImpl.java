@@ -7,6 +7,8 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lyx.lopicture.api.imagesearch.ImageSearchApiFacade;
+import com.lyx.lopicture.api.imagesearch.model.ImageSearchResult;
 import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.exception.ThrowUtils;
@@ -31,6 +33,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -55,6 +58,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         implements PictureService {
 
     private static final PictureConvert PICTURE_CONVERT = PictureConvert.INSTANCE;
+
+    @Value("${default.os-internal}")
+    private boolean isIntranet;
 
     @Resource
     private UserService userService;
@@ -347,6 +353,23 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
         }
         return uploadCount;
+    }
+
+    /**
+     * 以图搜图
+     *
+     * @param searchPictureByPictureRequest 以图搜图请求
+     * @return
+     */
+    @Override
+    public List<ImageSearchResult> searchPictureByPicture(SearchPictureByPictureRequest searchPictureByPictureRequest) {
+        Long pictureId = searchPictureByPictureRequest.pictureId();
+        checkPictureExist(pictureId, true);
+        Picture picture = this.lambdaQuery()
+                .select(Picture::getUrl)
+                .eq(Picture::getId, pictureId)
+                .one();
+        return ImageSearchApiFacade.searchImage(osManager.processPictureFormat(picture.getUrl()), isIntranet);
     }
 
     /**

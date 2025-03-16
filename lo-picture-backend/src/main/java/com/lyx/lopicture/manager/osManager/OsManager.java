@@ -75,6 +75,16 @@ public interface OsManager {
     UploadPictureResult uploadPicture(Object inputSource, String key, String originalFilename);
 
     /**
+     * 处理图片格式 （一般看对象存储官网有没有转换的可拼接的url）
+     *
+     * @param url 图片url
+     * @return 处理后的图片url
+     */
+    default String processPictureFormat(String url) {
+        return url;
+    }
+
+    /**
      * 处理上传类型
      *
      * @param t   上传对象
