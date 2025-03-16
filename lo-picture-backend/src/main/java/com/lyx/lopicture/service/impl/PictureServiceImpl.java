@@ -422,6 +422,51 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     }
 
     /**
+     * 编辑图片（批量）
+     *
+     * @param pictureEditByBatchRequest
+     * @param loginUser
+     * @return
+     */
+    @Override
+    public Boolean editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser) {
+        Long spaceId = pictureEditByBatchRequest.spaceId();
+        // 1. 校验空间权限
+        boolean isUseSpace = ObjectUtil.isNotNull(spaceId);
+        boolean nonAdmin = !userService.isAdmin(loginUser);
+        if (!isUseSpace) {
+            ThrowUtils.throwIf(nonAdmin, ErrorCode.NO_AUTH_ERROR);
+        } else {
+            ThrowUtils.throwIf(!spaceService.checkSpaceExistByUser(spaceId, loginUser) && nonAdmin,
+                    ErrorCode.NO_AUTH_ERROR, "空间不存在或无权限");
+        }
+        // 2. 获取图片列表（选择需要的字段）
+        List<Picture> pictureList = this.lambdaQuery()
+                .select(Picture::getId)
+                .eq(isUseSpace, Picture::getSpaceId, spaceId)
+                .in(Picture::getId, pictureEditByBatchRequest.pictureIdList())
+                .list();
+        if (CollUtil.isEmpty(pictureList)) {
+            return true;
+        }
+        // 3. 更新分类和标签
+        String category = pictureEditByBatchRequest.category();
+        if (CharSequenceUtil.isNotBlank(category)) {
+            pictureList.forEach(picture -> picture.setCategory(category));
+        }
+        List<String> tags = pictureEditByBatchRequest.tags();
+        if (CollUtil.isNotEmpty(tags)) {
+            pictureList.forEach(picture -> picture.setTags(tags));
+        }
+        // 4. 批量命名
+        fillPictureWithNameRule(pictureList, pictureEditByBatchRequest.nameRule());
+        // 5. 更新
+        boolean result = this.updateBatchById(pictureList);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片批量修改失败");
+        return true;
+    }
+
+    /**
      * 清理图片文件
      *
      * @param id 主键id
@@ -512,6 +557,28 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         } else {
             // 非管理员，无论是编辑还是创建默认都是待审核
             picture.setReviewStatus(PictureReviewStatusEnum.REVIEWING.getValue());
+        }
+    }
+
+    /**
+     * nameRule 格式：图片{序号}
+     *
+     * @param pictureList
+     * @param nameRule
+     */
+    private void fillPictureWithNameRule(List<Picture> pictureList, String nameRule) {
+        if (StrUtil.isBlank(nameRule) || CollUtil.isEmpty(pictureList)) {
+            return;
+        }
+        long count = 1;
+        try {
+            for (Picture picture : pictureList) {
+                String pictureName = nameRule.replaceAll("\\{序号}", String.valueOf(count++));
+                picture.setName(pictureName);
+            }
+        } catch (Exception e) {
+            log.error("名称解析错误", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "名称解析错误");
         }
     }
 }

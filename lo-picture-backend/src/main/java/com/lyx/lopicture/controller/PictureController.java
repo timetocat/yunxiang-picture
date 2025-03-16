@@ -245,4 +245,14 @@ public class PictureController {
         return ResultUtils.success(pictureService.searchPictureByColor(searchPictureByColorRequest, userService.getLoginUser(request)));
     }
 
+    /**
+     * 批量编辑图片
+     */
+    @PostMapping("/edit/batch")
+    public BaseResponse<Boolean> editPictureByBatch(@RequestBody PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureEditByBatchRequest == null, ErrorCode.PARAMS_ERROR);
+        return ResultUtils.success(pictureService.editPictureByBatch(pictureEditByBatchRequest,
+                userService.getLoginUser(request)));
+    }
+
 }

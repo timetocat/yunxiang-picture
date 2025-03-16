@@ -119,6 +119,15 @@ public interface PictureService extends IService<Picture> {
     List<PictureVO> searchPictureByColor(SearchPictureByColorRequest searchPictureByColorRequest, User loginUser);
 
     /**
+     * 编辑图片（批量）
+     *
+     * @param pictureEditByBatchRequest
+     * @param loginUser
+     * @return
+     */
+    Boolean editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
+
+    /**
      * 清理图片文件
      *
      * @param id 主键id
