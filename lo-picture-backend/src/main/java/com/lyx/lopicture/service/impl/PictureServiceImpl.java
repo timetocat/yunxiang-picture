@@ -8,6 +8,9 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lyx.lopicture.api.aliyunai.AliYunAiApi;
+import com.lyx.lopicture.api.aliyunai.model.CreateOutPaintingTaskRequest;
+import com.lyx.lopicture.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.lyx.lopicture.api.imagesearch.ImageSearchApiFacade;
 import com.lyx.lopicture.api.imagesearch.model.ImageSearchResult;
 import com.lyx.lopicture.exception.BusinessException;
@@ -80,6 +83,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private TransactionTemplate transactionTemplate;
+
+    @Resource
+    private AliYunAiApi aliYunAiApi;
 
     /**
      * 上传图片
@@ -464,6 +470,33 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         boolean result = this.updateBatchById(pictureList);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片批量修改失败");
         return true;
+    }
+
+    /**
+     * 创建扩图任务
+     *
+     * @param createPictureOutPaintingTaskRequest 创建扩图任务
+     * @param loginUser                           登录用户
+     * @return
+     */
+    @Override
+    public CreateOutPaintingTaskResponse createPictureOutPaintingTask
+    (CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
+        Long pictureId = createPictureOutPaintingTaskRequest.pictureId();
+        // 校验权限
+        checkPermissions(loginUser, pictureId);
+        String url = this.lambdaQuery()
+                .select(Picture::getUrl)
+                .eq(Picture::getId, pictureId)
+                .one().getUrl();
+        // 创建扩图任务
+        CreateOutPaintingTaskRequest createOutPaintingTaskRequest = new CreateOutPaintingTaskRequest();
+        CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
+        input.setImageUrl(url);
+        createOutPaintingTaskRequest.setInput(input);
+        createOutPaintingTaskRequest.setParameters(createPictureOutPaintingTaskRequest.parameters());
+        // 创建任务
+        return aliYunAiApi.createOutPaintingTask(createOutPaintingTaskRequest);
     }
 
     /**

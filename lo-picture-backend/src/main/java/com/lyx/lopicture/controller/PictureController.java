@@ -1,15 +1,20 @@
 package com.lyx.lopicture.controller;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alicp.jetcache.anno.CacheType;
 import com.alicp.jetcache.anno.Cached;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lyx.lopicture.annotation.AuthCheck;
+import com.lyx.lopicture.api.aliyunai.AliYunAiApi;
+import com.lyx.lopicture.api.aliyunai.model.CreateOutPaintingTaskResponse;
+import com.lyx.lopicture.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.lyx.lopicture.api.imagesearch.model.ImageSearchResult;
 import com.lyx.lopicture.common.BaseResponse;
 import com.lyx.lopicture.common.DeleteRequest;
 import com.lyx.lopicture.common.ResultUtils;
 import com.lyx.lopicture.constant.UserConstant;
+import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.exception.ThrowUtils;
 import com.lyx.lopicture.model.dto.picture.*;
@@ -41,6 +46,8 @@ public class PictureController {
     private final PictureService pictureService;
 
     private final SpaceService spaceService;
+
+    private final AliYunAiApi aliYunAiApi;
 
     /**
      * 上传图片（可重新上传）
@@ -253,6 +260,28 @@ public class PictureController {
         ThrowUtils.throwIf(pictureEditByBatchRequest == null, ErrorCode.PARAMS_ERROR);
         return ResultUtils.success(pictureService.editPictureByBatch(pictureEditByBatchRequest,
                 userService.getLoginUser(request)));
+    }
+
+
+    /**
+     * 创建 AI 扩图任务
+     */
+    @PostMapping("/out_painting/create_task")
+    public BaseResponse<CreateOutPaintingTaskResponse> createPictureOutPaintingTask(@RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest,
+                                                                                    HttpServletRequest request) {
+        ThrowUtils.throwIf(createPictureOutPaintingTaskRequest == null, ErrorCode.PARAMS_ERROR);
+        return ResultUtils.success(pictureService.createPictureOutPaintingTask(createPictureOutPaintingTaskRequest,
+                userService.getLoginUser(request)));
+    }
+
+    /**
+     * 查询 AI 扩图任务
+     */
+    @GetMapping("/out_painting/get_task")
+    public BaseResponse<GetOutPaintingTaskResponse> getPictureOutPaintingTask(String taskId) {
+        ThrowUtils.throwIf(StrUtil.isBlank(taskId), ErrorCode.PARAMS_ERROR);
+        GetOutPaintingTaskResponse task = aliYunAiApi.getOutPaintingTask(taskId);
+        return ResultUtils.success(task);
     }
 
 }

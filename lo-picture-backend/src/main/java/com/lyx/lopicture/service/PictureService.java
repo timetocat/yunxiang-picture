@@ -2,6 +2,7 @@ package com.lyx.lopicture.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.lyx.lopicture.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.lyx.lopicture.api.imagesearch.model.ImageSearchResult;
 import com.lyx.lopicture.model.dto.picture.*;
 import com.lyx.lopicture.model.entity.Picture;
@@ -126,6 +127,16 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     Boolean editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
+
+    /**
+     * 创建扩图任务
+     *
+     * @param createPictureOutPaintingTaskRequest 创建扩图任务
+     * @param loginUser                           登录用户
+     * @return
+     */
+    CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser);
+
 
     /**
      * 清理图片文件
