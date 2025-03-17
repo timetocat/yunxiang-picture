@@ -283,7 +283,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      * @param loginUser 登录用户
      * @param id        主键id
      */
-    private void checkPermissions(User loginUser, Long id) {
+    @Override
+    public void checkPermissions(User loginUser, Long id) {
         Space space = this.lambdaQuery()
                 .select(Space::getUserId)
                 .eq(Space::getId, id)

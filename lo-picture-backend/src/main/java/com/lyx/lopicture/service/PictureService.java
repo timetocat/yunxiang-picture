@@ -5,9 +5,13 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.lyx.lopicture.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.lyx.lopicture.api.imagesearch.model.ImageSearchResult;
 import com.lyx.lopicture.model.dto.picture.*;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceUserAnalyzeRequest;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.vo.PictureVO;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceCategoryAnalyzeResponse;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceUserAnalyzeResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -137,6 +141,21 @@ public interface PictureService extends IService<Picture> {
      */
     CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser);
 
+    /**
+     * 分组查询空间分类统计数据
+     *
+     * @param spaceCategoryAnalyzeRequest
+     * @return
+     */
+    List<SpaceCategoryAnalyzeResponse> getAnalyzeGroupByCategory(SpaceCategoryAnalyzeRequest spaceCategoryAnalyzeRequest);
+
+    /**
+     * 空间用户上传行为分析情况
+     *
+     * @param spaceUserAnalyzeRequest
+     * @return
+     */
+    List<SpaceUserAnalyzeResponse> getAnalyzeGroupByUser(SpaceUserAnalyzeRequest spaceUserAnalyzeRequest);
 
     /**
      * 清理图片文件

@@ -3,8 +3,14 @@ package com.lyx.lopicture.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lyx.lopicture.model.dto.picture.PictureQueryRequest;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceUserAnalyzeRequest;
 import com.lyx.lopicture.model.entity.Picture;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceCategoryAnalyzeResponse;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceUserAnalyzeResponse;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * @author Administrator
@@ -18,6 +24,11 @@ public interface PictureMapper extends BaseMapper<Picture> {
 
     Picture getDeletePictureById(@Param("id") Long id);
 
+    List<SpaceCategoryAnalyzeResponse> getAnalyzeGroupByCategory(@Param("query") SpaceCategoryAnalyzeRequest
+                                                                         spaceCategoryAnalyzeRequest);
+
+    List<SpaceUserAnalyzeResponse> getAnalyzeGroupByUser(@Param("query") SpaceUserAnalyzeRequest
+                                                                 spaceUserAnalyzeRequest);
 }
 
 

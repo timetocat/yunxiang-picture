@@ -123,5 +123,12 @@ public interface SpaceService extends IService<Space> {
      */
     void fillSpaceBySpaceLevel(Space space);
 
+    /**
+     * 检查权限
+     *
+     * @param loginUser
+     * @param id
+     */
+    void checkPermissions(User loginUser, Long id);
 
 }

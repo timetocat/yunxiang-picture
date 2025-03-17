@@ -140,10 +140,70 @@
             </foreach>
         </if>
     </select>
-    <select id="getDeletePictureById" resultMap="BaseResultMap"><!--resultType="com.lyx.lopicture.model.entity.Picture">-->
+
+    <select id="getDeletePictureById"
+            resultMap="BaseResultMap"><!--resultType="com.lyx.lopicture.model.entity.Picture">-->
         SELECT url,
                thumbnail_url
         FROM picture
         where id = #{id}
     </select>
+
+    <select id="getAnalyzeGroupByCategory"
+            resultType="com.lyx.lopicture.model.vo.space.analyze.SpaceCategoryAnalyzeResponse">
+        SELECT picture.`category` as `category`,
+        count(*) as count,
+        sum(picture.pic_size) as totalSize
+        FROM picture
+        <where>
+            is_delete = 0
+            <choose>
+                <when test="query.queryPublic and !query.queryAll">
+                    AND space_id IS NULL
+                </when>
+                <otherwise>
+                    <if test="query.spaceId != null">
+                        AND space_id = #{query.spaceId}
+                    </if>
+                </otherwise>
+            </choose>
+        </where>
+        GROUP BY `category`
+    </select>
+    <select id="getAnalyzeGroupByUser"
+            resultType="com.lyx.lopicture.model.vo.space.analyze.SpaceUserAnalyzeResponse">
+        SELECT
+        <choose>
+            <when test="query.timeDimension == 'day' ">
+                DATE_FORMAT(picture.create_time, '%Y-%m-%d')
+            </when>
+            <when test="query.timeDimension == 'week' ">
+                YEARWEEK(picture.createTime)
+            </when>
+            <otherwise>
+                DATE_FORMAT(picture.createTime, '%Y-%m')
+            </otherwise>
+        </choose>
+        as period,
+        count(*) as count
+        FROM picture
+        <where>
+            is_delete = 0
+            <choose>
+                <when test="query.queryPublic and !query.queryAll">
+                    AND space_id IS NULL
+                </when>
+                <otherwise>
+                    <if test="query.spaceId != null">
+                        AND space_id = #{query.spaceId}
+                    </if>
+                </otherwise>
+            </choose>
+            <if test="query.userId != null">
+                AND user_id = #{query.userId}
+            </if>
+        </where>
+        GROUP BY period
+    </select>
+
 </mapper>

@@ -24,11 +24,15 @@ import com.lyx.lopicture.mapper.PictureMapper;
 import com.lyx.lopicture.model.convert.PictureConvert;
 import com.lyx.lopicture.model.dto.file.UploadPictureResult;
 import com.lyx.lopicture.model.dto.picture.*;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceUserAnalyzeRequest;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.enums.PictureReviewStatusEnum;
 import com.lyx.lopicture.model.vo.PictureVO;
 import com.lyx.lopicture.model.vo.UserVO;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceCategoryAnalyzeResponse;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceUserAnalyzeResponse;
 import com.lyx.lopicture.service.PictureService;
 import com.lyx.lopicture.service.SpaceService;
 import com.lyx.lopicture.service.UserService;
@@ -497,6 +501,28 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         createOutPaintingTaskRequest.setParameters(createPictureOutPaintingTaskRequest.parameters());
         // 创建任务
         return aliYunAiApi.createOutPaintingTask(createOutPaintingTaskRequest);
+    }
+
+    /**
+     * 分组查询空间分类统计数据
+     *
+     * @param spaceCategoryAnalyzeRequest
+     * @return
+     */
+    @Override
+    public List<SpaceCategoryAnalyzeResponse> getAnalyzeGroupByCategory(SpaceCategoryAnalyzeRequest spaceCategoryAnalyzeRequest) {
+        return this.baseMapper.getAnalyzeGroupByCategory(spaceCategoryAnalyzeRequest);
+    }
+
+    /**
+     * 空间用户上传行为分析情况
+     *
+     * @param spaceUserAnalyzeRequest
+     * @return
+     */
+    @Override
+    public List<SpaceUserAnalyzeResponse> getAnalyzeGroupByUser(SpaceUserAnalyzeRequest spaceUserAnalyzeRequest) {
+        return this.baseMapper.getAnalyzeGroupByUser(spaceUserAnalyzeRequest);
     }
 
     /**
