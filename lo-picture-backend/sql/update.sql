@@ -23,3 +23,7 @@ CREATE INDEX idx_spaceId ON picture (space_id);
 -- 添加新列
 ALTER TABLE picture
     ADD COLUMN pic_color varchar(16) null comment '图片主色调';
+
+ALTER TABLE space
+    ADD COLUMN space_type int default 0 not null comment '空间类型：0-私有 1-团队';
+

@@ -51,6 +51,9 @@
             <if test="query.spaceLevel != null">
                 AND space_level = #{query.spaceLevel}
             </if>
+            <if test="query.spaceType != null">
+                AND space_type = #{query.spaceType}
+            </if>
             <if test="@cn.hutool.core.text.CharSequenceUtil@isNotBlank(query.spaceName)">
                 AND space_name LIKE CONCAT('%', #{query.spaceName}, '%')
             </if>
