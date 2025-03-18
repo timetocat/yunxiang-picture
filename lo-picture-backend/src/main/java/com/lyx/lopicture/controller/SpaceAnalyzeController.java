@@ -122,5 +122,37 @@ public class SpaceAnalyzeController {
         return ResultUtils.success(spaceAnalyzeService.getSpaceRankAnalyze(spaceRankAnalyzeRequest,
                 userService.getLoginUser(request)));
     }
+
+    /**
+     * 获取图片空间等级分析
+     *
+     * @param spaceLevelAnalyzeRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/level")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<List<SpaceLevelAnalyzeResponse>> getSpaceLevelAnalyze(@RequestBody SpaceLevelAnalyzeRequest spaceLevelAnalyzeRequest,
+                                                                              HttpServletRequest request) {
+        ThrowUtils.throwIf(spaceLevelAnalyzeRequest == null, ErrorCode.PARAMS_ERROR);
+        return ResultUtils.success(spaceAnalyzeService.getSpaceLevelAnalyze(spaceLevelAnalyzeRequest,
+                userService.getLoginUser(request)));
+    }
+
+    /**
+     * 获取图片空间审核分析
+     *
+     * @param spaceReviewAnalyzeRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/review")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<List<SpaceReviewAnalyzeResponse>> reviewSpace(@RequestBody SpaceReviewAnalyzeRequest spaceReviewAnalyzeRequest,
+                                                                      HttpServletRequest request) {
+        ThrowUtils.throwIf(spaceReviewAnalyzeRequest == null, ErrorCode.PARAMS_ERROR);
+        return ResultUtils.success(spaceAnalyzeService.getSpaceReviewAnalyze(spaceReviewAnalyzeRequest,
+                userService.getLoginUser(request)));
+    }
 }
 

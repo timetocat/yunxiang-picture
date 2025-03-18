@@ -6,11 +6,14 @@ import com.lyx.lopicture.model.dto.space.SpaceAddRequest;
 import com.lyx.lopicture.model.dto.space.SpaceEditRequest;
 import com.lyx.lopicture.model.dto.space.SpaceQueryRequest;
 import com.lyx.lopicture.model.dto.space.SpaceUpdateRequest;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceLevelAnalyzeRequest;
 import com.lyx.lopicture.model.entity.Space;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.vo.SpaceVO;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceLevelAnalyzeResponse;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author Administrator
@@ -106,6 +109,14 @@ public interface SpaceService extends IService<Space> {
      * @return
      */
     Boolean updateSpaceCapacity(Long id, Long size);
+
+    /**
+     * 根据等级分析空间
+     *
+     * @param spaceLevelAnalyzeRequest
+     * @return
+     */
+    List<SpaceLevelAnalyzeResponse> getAnalyzeByLevel(SpaceLevelAnalyzeRequest spaceLevelAnalyzeRequest);
 
     /**
      * 判断空间是否存在

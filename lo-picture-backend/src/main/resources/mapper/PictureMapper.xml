@@ -206,4 +206,44 @@
         GROUP BY period
     </select>
 
+    <select id="getAnalyzeByReview"
+            resultType="com.lyx.lopicture.model.vo.space.analyze.SpaceReviewAnalyzeResponse$SpaceReviewAnalyzeInnerResponse">
+        SELECT
+        <choose>
+            <when test="query.timeDimension == 'day' ">
+                DATE_FORMAT(picture.create_time, '%Y-%m-%d')
+            </when>
+            <when test="query.timeDimension == 'week' ">
+                YEARWEEK(picture.createTime)
+            </when>
+            <otherwise>
+                DATE_FORMAT(picture.createTime, '%Y-%m')
+            </otherwise>
+        </choose>
+        as period,
+        picture.review_status,
+        count(*) as count
+        FROM picture
+        <where>
+            is_delete = 0
+            <choose>
+                <when test="query.queryPublic and !query.queryAll">
+                    AND picture.space_id IS NULL
+                </when>
+                <otherwise>
+                    <if test="query.spaceId != null">
+                        AND picture.space_id = #{query.spaceId}
+                    </if>
+                </otherwise>
+            </choose>
+            <if test="@cn.hutool.core.collection.CollUtil@isNotEmpty(query.reviewStatusList)">
+                AND picture.review_status in
+                <foreach collection="query.reviewStatusList" item="reviewStatus" open="(" separator="," close=")">
+                    #{reviewStatus}
+                </foreach>
+            </if>
+        </where>
+        GROUP BY period, review_status
+    </select>
+
 </mapper>

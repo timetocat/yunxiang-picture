@@ -1,7 +1,6 @@
 package com.lyx.lopicture.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -26,7 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -220,6 +221,30 @@ public class SpaceAnalyzeServiceImpl extends ServiceImpl<SpaceMapper, Space>
                 .orderByDesc(Space::getTotalSize)
                 .page(new Page<>(1, spaceRankAnalyzeRequest.getTopN()))
                 .getRecords();
+    }
+
+    /**
+     * 获取空间等级情况
+     *
+     * @param spaceLevelAnalyzeRequest
+     * @param loginUser
+     * @return
+     */
+    @Override
+    public List<SpaceLevelAnalyzeResponse> getSpaceLevelAnalyze(SpaceLevelAnalyzeRequest spaceLevelAnalyzeRequest, User loginUser) {
+        return spaceService.getAnalyzeByLevel(spaceLevelAnalyzeRequest);
+    }
+
+    /**
+     * 获取空间审核情况
+     *
+     * @param spaceReviewAnalyzeRequest
+     * @param loginUser
+     * @return
+     */
+    @Override
+    public List<SpaceReviewAnalyzeResponse> getSpaceReviewAnalyze(SpaceReviewAnalyzeRequest spaceReviewAnalyzeRequest, User loginUser) {
+        return pictureService.getAnalyzeByReview(spaceReviewAnalyzeRequest);
     }
 
     private void checkPermissions(SpaceAnalyzeRequest spaceAnalyzeRequest, User loginUser) {

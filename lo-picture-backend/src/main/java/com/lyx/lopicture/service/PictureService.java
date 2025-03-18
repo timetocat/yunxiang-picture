@@ -6,11 +6,13 @@ import com.lyx.lopicture.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.lyx.lopicture.api.imagesearch.model.ImageSearchResult;
 import com.lyx.lopicture.model.dto.picture.*;
 import com.lyx.lopicture.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceReviewAnalyzeRequest;
 import com.lyx.lopicture.model.dto.space.analyze.SpaceUserAnalyzeRequest;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.vo.PictureVO;
 import com.lyx.lopicture.model.vo.space.analyze.SpaceCategoryAnalyzeResponse;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceReviewAnalyzeResponse;
 import com.lyx.lopicture.model.vo.space.analyze.SpaceUserAnalyzeResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -156,6 +158,14 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     List<SpaceUserAnalyzeResponse> getAnalyzeGroupByUser(SpaceUserAnalyzeRequest spaceUserAnalyzeRequest);
+
+    /**
+     * 图片空间审核情况分析
+     *
+     * @param spaceReviewAnalyzeRequest
+     * @return
+     */
+    List<SpaceReviewAnalyzeResponse> getAnalyzeByReview(SpaceReviewAnalyzeRequest spaceReviewAnalyzeRequest);
 
     /**
      * 清理图片文件

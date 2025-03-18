@@ -25,6 +25,7 @@ import com.lyx.lopicture.model.convert.PictureConvert;
 import com.lyx.lopicture.model.dto.file.UploadPictureResult;
 import com.lyx.lopicture.model.dto.picture.*;
 import com.lyx.lopicture.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceReviewAnalyzeRequest;
 import com.lyx.lopicture.model.dto.space.analyze.SpaceUserAnalyzeRequest;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.entity.User;
@@ -32,6 +33,7 @@ import com.lyx.lopicture.model.enums.PictureReviewStatusEnum;
 import com.lyx.lopicture.model.vo.PictureVO;
 import com.lyx.lopicture.model.vo.UserVO;
 import com.lyx.lopicture.model.vo.space.analyze.SpaceCategoryAnalyzeResponse;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceReviewAnalyzeResponse;
 import com.lyx.lopicture.model.vo.space.analyze.SpaceUserAnalyzeResponse;
 import com.lyx.lopicture.service.PictureService;
 import com.lyx.lopicture.service.SpaceService;
@@ -523,6 +525,19 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Override
     public List<SpaceUserAnalyzeResponse> getAnalyzeGroupByUser(SpaceUserAnalyzeRequest spaceUserAnalyzeRequest) {
         return this.baseMapper.getAnalyzeGroupByUser(spaceUserAnalyzeRequest);
+    }
+
+    /**
+     * 图片空间审核情况分析
+     *
+     * @param spaceReviewAnalyzeRequest
+     * @return
+     */
+    @Override
+    public List<SpaceReviewAnalyzeResponse> getAnalyzeByReview(SpaceReviewAnalyzeRequest spaceReviewAnalyzeRequest) {
+        return this.baseMapper.getAnalyzeByReview(spaceReviewAnalyzeRequest).stream()
+                .map(SpaceReviewAnalyzeResponse.SpaceReviewAnalyzeInnerResponse::transform)
+                .toList();
     }
 
     /**

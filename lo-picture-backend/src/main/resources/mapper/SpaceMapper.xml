@@ -94,4 +94,18 @@
           AND total_count + 1 &lt; space.max_count
     </update>
 
+    <select id="getAnalyzeByLevel"
+            resultType="com.lyx.lopicture.model.vo.space.analyze.SpaceLevelAnalyzeResponse$SpaceLevelAnalyzeInnerResponse">
+        SELECT space_level,
+        COUNT(space_level) AS count,
+        SUM(total_size) AS total_size,
+        SUM(total_count) AS total_count
+        FROM space
+        WHERE is_delete = 0
+        <if test="query.level != null">
+            AND space_level = #{query.level}
+        </if>
+        GROUP BY space_level
+    </select>
+
 </mapper>

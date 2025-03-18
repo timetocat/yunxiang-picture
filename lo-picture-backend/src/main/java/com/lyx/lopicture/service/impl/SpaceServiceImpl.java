@@ -14,12 +14,14 @@ import com.lyx.lopicture.model.dto.space.SpaceAddRequest;
 import com.lyx.lopicture.model.dto.space.SpaceEditRequest;
 import com.lyx.lopicture.model.dto.space.SpaceQueryRequest;
 import com.lyx.lopicture.model.dto.space.SpaceUpdateRequest;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceLevelAnalyzeRequest;
 import com.lyx.lopicture.model.entity.Space;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.enums.SpaceLevelEnum;
 import com.lyx.lopicture.model.enums.spacelevel.SpaceLevel;
 import com.lyx.lopicture.model.vo.SpaceVO;
 import com.lyx.lopicture.model.vo.UserVO;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceLevelAnalyzeResponse;
 import com.lyx.lopicture.service.SpaceService;
 import com.lyx.lopicture.service.UserService;
 import org.springframework.stereotype.Service;
@@ -234,6 +236,19 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     @Override
     public Boolean updateSpaceCapacity(Long id, Long size) {
         return this.baseMapper.updateSpaceCapacity(id, size);
+    }
+
+    /**
+     * 根据等级分析空间
+     *
+     * @param spaceLevelAnalyzeRequest
+     * @return
+     */
+    @Override
+    public List<SpaceLevelAnalyzeResponse> getAnalyzeByLevel(SpaceLevelAnalyzeRequest spaceLevelAnalyzeRequest) {
+        return this.baseMapper.getAnalyzeByLevel(spaceLevelAnalyzeRequest).stream()
+                .map(SpaceLevelAnalyzeResponse.SpaceLevelAnalyzeInnerResponse::transform)
+                .toList();
     }
 
 

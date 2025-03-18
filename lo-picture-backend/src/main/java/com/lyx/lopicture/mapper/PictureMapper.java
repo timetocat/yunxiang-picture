@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lyx.lopicture.model.dto.picture.PictureQueryRequest;
 import com.lyx.lopicture.model.dto.space.analyze.SpaceCategoryAnalyzeRequest;
+import com.lyx.lopicture.model.dto.space.analyze.SpaceReviewAnalyzeRequest;
 import com.lyx.lopicture.model.dto.space.analyze.SpaceUserAnalyzeRequest;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.vo.space.analyze.SpaceCategoryAnalyzeResponse;
+import com.lyx.lopicture.model.vo.space.analyze.SpaceReviewAnalyzeResponse;
 import com.lyx.lopicture.model.vo.space.analyze.SpaceUserAnalyzeResponse;
 import org.apache.ibatis.annotations.Param;
 
@@ -29,6 +31,9 @@ public interface PictureMapper extends BaseMapper<Picture> {
 
     List<SpaceUserAnalyzeResponse> getAnalyzeGroupByUser(@Param("query") SpaceUserAnalyzeRequest
                                                                  spaceUserAnalyzeRequest);
+
+    List<SpaceReviewAnalyzeResponse.SpaceReviewAnalyzeInnerResponse> getAnalyzeByReview
+            (@Param("query") SpaceReviewAnalyzeRequest spaceReviewAnalyzeRequest);
 }
 
 
