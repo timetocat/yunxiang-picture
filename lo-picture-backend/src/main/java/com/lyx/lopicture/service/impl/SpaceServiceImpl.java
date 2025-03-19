@@ -15,15 +15,20 @@ import com.lyx.lopicture.model.dto.space.SpaceEditRequest;
 import com.lyx.lopicture.model.dto.space.SpaceQueryRequest;
 import com.lyx.lopicture.model.dto.space.SpaceUpdateRequest;
 import com.lyx.lopicture.model.dto.space.analyze.SpaceLevelAnalyzeRequest;
+import com.lyx.lopicture.model.dto.spaceuser.SpaceUserAddRequest;
 import com.lyx.lopicture.model.entity.Space;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.enums.SpaceLevelEnum;
+import com.lyx.lopicture.model.enums.SpaceRoleEnum;
+import com.lyx.lopicture.model.enums.SpaceTypeEnum;
 import com.lyx.lopicture.model.enums.spacelevel.SpaceLevel;
 import com.lyx.lopicture.model.vo.SpaceVO;
 import com.lyx.lopicture.model.vo.UserVO;
 import com.lyx.lopicture.model.vo.space.analyze.SpaceLevelAnalyzeResponse;
 import com.lyx.lopicture.service.SpaceService;
+import com.lyx.lopicture.service.SpaceUserService;
 import com.lyx.lopicture.service.UserService;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -50,6 +55,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     private UserService userService;
 
     @Resource
+    private SpaceUserService spaceUserService;
+
+    @Resource
     private TransactionTemplate transactionTemplate;
 
     Map<Long, Object> lockMap = new ConcurrentHashMap<>();
@@ -67,18 +75,17 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         // 填充容量大小
         this.fillSpaceBySpaceLevel(space);
         // 2. 校验权限，非管理员只能创建普通级别的空间
+        boolean isAdmin = userService.isAdmin(loginUser);
         if (ObjectUtil.notEqual(SpaceLevelEnum.COMMON.getValue(),
                 SpaceLevelEnum.getSpaceLevelInfo(space.getSpaceLevel()))) {
-            ThrowUtils.throwIf(!userService.isAdmin(loginUser),
+            ThrowUtils.throwIf(!isAdmin,
                     ErrorCode.NO_AUTH_ERROR, "无权限创建指定级别的空间");
         }
         // 3. 控制同一用户只能创建一个私有空间
         Long userId = loginUser.getId();
         space.setUserId(userId);
-        if (userService.isAdmin(loginUser)) { // 管理员可以创建多空间
-            boolean result = this.save(space);
-            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-
+        if (isAdmin) { // 管理员可以创建多空间
+            return createSpace(space, userId);
         } else {
             Object lock = lockMap.computeIfAbsent(userId, key -> new Object());
             synchronized (lock) {
@@ -86,21 +93,17 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                     // 判断是否已有空间
                     boolean exists = this.lambdaQuery()
                             .eq(Space::getUserId, userId)
+                            .eq(Space::getSpaceType, space.getSpaceType())
                             .exists();
                     // 已有空间，不能继续创建
                     ThrowUtils.throwIf(exists, ErrorCode.OPERATION_ERROR, "每个用户仅能有一个私有空间");
                     // 创建空间
-                    return transactionTemplate.execute(status -> {
-                        boolean result = this.save(space);
-                        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-                        return space.getId();
-                    });
+                    return createSpace(space, userId);
                 } finally {
                     lockMap.remove(userId);
                 }
             }
         }
-        return space.getId();
     }
 
     @Override
@@ -309,6 +312,31 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
     }
+
+    /**
+     * 创建空间
+     *
+     * @param space
+     * @param userId
+     * @return
+     */
+    @Nullable
+    private Long createSpace(Space space, Long userId) {
+        return transactionTemplate.execute(status -> {
+            boolean result = this.save(space);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+            // 创建成功后，如果是团队空间，关联新增团队成员记录
+            if (SpaceTypeEnum.TEAM.getValue().equals(space.getSpaceType())) {
+                spaceUserService.addSpaceUser(SpaceUserAddRequest.builder()
+                        .userId(userId)
+                        .spaceId(space.getId())
+                        .spaceRole(SpaceRoleEnum.ADMIN.getValue())
+                        .build());
+            }
+            return space.getId();
+        });
+    }
+
 }
 
 
