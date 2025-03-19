@@ -48,7 +48,6 @@ public class SpaceUser implements Serializable {
     /**
      * 更新时间
      */
-    @TableLogic
     @TableField(value = "update_time")
     private Date updateTime;
 
