@@ -355,11 +355,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return false;
         }
         Long id = user.getId();
-        checkUserExist(id, IS_THROW);
+//        checkUserExist(id, IS_THROW);
         // 查询用户权限
         user = this.getOne(Wrappers.lambdaQuery(User.class)
                 .select(User::getUserRole)
                 .eq(User::getId, id));
+        ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
         return UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
     }
 
