@@ -11,6 +11,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper
 public interface PictureConvert {
 
@@ -25,9 +27,10 @@ public interface PictureConvert {
     @Mappings({
             @Mapping(source = "picture.id", target = "id"),
             @Mapping(source = "picture.createTime", target = "createTime"),
-            @Mapping(source = "userVO", target = "user")
+            @Mapping(source = "userVO", target = "user"),
+            @Mapping(source = "permissionList", target = "permissionList")
     })
-    PictureVO mapToPictureVO(Picture picture, UserVO userVO);
+    PictureVO mapToPictureVO(Picture picture, UserVO userVO, List<String> permissionList);
 
 
 }

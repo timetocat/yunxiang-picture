@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.exception.ThrowUtils;
+import com.lyx.lopicture.manager.auth.SpaceUserAuthManager;
 import com.lyx.lopicture.mapper.SpaceMapper;
 import com.lyx.lopicture.model.convert.SpaceConvert;
 import com.lyx.lopicture.model.dto.space.SpaceAddRequest;
@@ -60,6 +61,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     @Resource
     private TransactionTemplate transactionTemplate;
 
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
+
     Map<Long, Object> lockMap = new ConcurrentHashMap<>();
 
     @Override
@@ -108,7 +112,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     @Override
     public Boolean deleteSpace(Long id, User loginUser) {
-        checkPermissions(loginUser, id);
+//        checkPermissions(loginUser, id);
         boolean result = this.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "空间删除失败");
         return true;
@@ -123,7 +127,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      */
     @Override
     public Boolean updateSpace(SpaceUpdateRequest spaceUpdateRequest, User loginUser) {
-        checkSpaceExist(spaceUpdateRequest.id(), true);
+//        checkSpaceExist(spaceUpdateRequest.id(), true);
         Space space = SPACE_CONVERT.mapToSpace(spaceUpdateRequest);
         this.fillSpaceBySpaceLevel(space);
         boolean result = this.updateById(space);
@@ -141,11 +145,15 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     @Override
     public SpaceVO getSpaceVO(Space space, HttpServletRequest request) {
         Long userId = space.getUserId();
+        User user = null;
         UserVO userVO = null;
         if (userId != null && userId > 0) {
-            userVO = userService.getUserVO(userService.getById(userId));
+            user = userService.getById(userId);
+            userVO = userService.getUserVO(user);
         }
-        return SPACE_CONVERT.mapToSpaceVO(space, userVO);
+        List<String> permissionList = spaceUserAuthManager
+                .getPermissionList(space, user);
+        return SPACE_CONVERT.mapToSpaceVO(space, userVO, permissionList);
     }
 
     /**
@@ -182,8 +190,13 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                 .stream()
                 .collect(Collectors.groupingBy(User::getId));
         SpaceVOPage.setRecords(spaceList.stream()
-                .map(Space -> SPACE_CONVERT.mapToSpaceVO(Space,
-                        userService.getUserVO(userIdUserListMap.get(Space.getUserId()).get(0))))
+                .map(space -> {
+                    User user = userIdUserListMap.get(space.getUserId()).get(0);
+                    List<String> permissionList = spaceUserAuthManager
+                            .getPermissionList(space, user);
+                    return SPACE_CONVERT.mapToSpaceVO(space,
+                            userService.getUserVO(user), permissionList);
+                })
                 .collect(Collectors.toList()));
         return SpaceVOPage;
     }
@@ -197,7 +210,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      */
     @Override
     public Boolean editSpace(SpaceEditRequest spaceEditRequest, User loginUser) {
-        checkSpaceExist(spaceEditRequest.id(), true);
+//        checkSpaceExist(spaceEditRequest.id(), true);
         Space space = SPACE_CONVERT.mapToSpace(spaceEditRequest);
         boolean result = this.updateById(space);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "空间编辑失败");
@@ -213,6 +226,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      */
     @Override
     public Boolean checkSpaceExistByUser(Long id, User loginUser) {
+        // 判断权限是否属于编辑者
         return this.lambdaQuery()
                 .eq(Space::getUserId, loginUser.getId())
                 .eq(Space::getId, id)

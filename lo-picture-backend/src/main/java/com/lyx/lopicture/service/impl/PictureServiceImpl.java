@@ -16,6 +16,7 @@ import com.lyx.lopicture.api.imagesearch.model.ImageSearchResult;
 import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.exception.ThrowUtils;
+import com.lyx.lopicture.manager.auth.SpaceUserAuthManager;
 import com.lyx.lopicture.manager.osManager.OsManager;
 import com.lyx.lopicture.manager.upload.picture.FilePictureUpload;
 import com.lyx.lopicture.manager.upload.picture.PictureUploadTemplate;
@@ -30,6 +31,7 @@ import com.lyx.lopicture.model.dto.space.analyze.SpaceUserAnalyzeRequest;
 import com.lyx.lopicture.model.entity.Picture;
 import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.enums.PictureReviewStatusEnum;
+import com.lyx.lopicture.model.enums.SpaceRoleEnum;
 import com.lyx.lopicture.model.vo.PictureVO;
 import com.lyx.lopicture.model.vo.UserVO;
 import com.lyx.lopicture.model.vo.space.analyze.SpaceCategoryAnalyzeResponse;
@@ -93,6 +95,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Resource
     private AliYunAiApi aliYunAiApi;
 
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
+
     /**
      * 上传图片
      *
@@ -109,8 +114,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(currentUser == null, ErrorCode.NO_AUTH_ERROR);
         Long spaceId = pictureUploadRequest.spaceId();
         if (ObjectUtil.isNotNull(spaceId)) {
-            ThrowUtils.throwIf(!spaceService.checkSpaceExistByUser(spaceId, currentUser),
-                    ErrorCode.NO_AUTH_ERROR, "空间不存在或无权限");
+            /*ThrowUtils.throwIf(!spaceService.checkSpaceExistByUser(spaceId, currentUser),
+                    ErrorCode.NO_AUTH_ERROR, "空间不存在或无权限");*/
             String result = spaceService.checkSpaceCapacity(spaceId);
             ThrowUtils.throwIf(!CharSequenceUtil.equals(result, "OK"), ErrorCode.OPERATION_ERROR, result);
         }
@@ -120,10 +125,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             pictureId = pictureUploadRequest.id();
         }
         // 如果是更新，判断图片是否存在
-        if (ObjectUtil.isNotNull(pictureId)) {
+        /*if (ObjectUtil.isNotNull(pictureId)) {
             // 仅本人或管理员可编辑图片
             checkPermissions(currentUser, pictureId);
-        }
+        }*/
         // 上传图片，得到图片信息
         // 按照用户 id 划分目录
         String uploadPathPrefix = null;
@@ -174,7 +179,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
             return null;
         });
-        return PICTURE_CONVERT.mapToPictureVO(picture, null);
+        return PICTURE_CONVERT.mapToPictureVO(picture, null,
+                spaceUserAuthManager.getPermissionsByRole(SpaceRoleEnum.ADMIN.getValue()));
     }
 
     /**
@@ -186,7 +192,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      */
     @Override
     public Boolean delete(Long id, User loginUser) {
-        checkPermissions(loginUser, id);
+//        checkPermissions(loginUser, id);
         boolean result = this.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "图片删除失败");
         // 清理图片资源
@@ -204,7 +210,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Override
     public Boolean updatePicture(PictureUpdateRequest pictureUpdateRequest, User loginUser) {
         // 判断图片是否存在
-        checkPictureExist(pictureUpdateRequest.id(), true);
+//        checkPictureExist(pictureUpdateRequest.id(), true);
         Picture picture = PICTURE_CONVERT.mapToPicture(pictureUpdateRequest);
         // 补充审核参数
         this.fillReviewParams(picture, loginUser);
@@ -223,11 +229,15 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Override
     public PictureVO getPictureVO(Picture picture, HttpServletRequest request) {
         Long userId = picture.getUserId();
+        User user = null;
         UserVO userVO = null;
         if (userId != null && userId > 0) {
-            userVO = userService.getUserVO(userService.getById(userId));
+            user = userService.getById(userId);
+            userVO = userService.getUserVO(user);
         }
-        return PICTURE_CONVERT.mapToPictureVO(picture, userVO);
+        List<String> permissionList = spaceUserAuthManager
+                .getPermissionList(spaceService.getById(picture.getSpaceId()), user);
+        return PICTURE_CONVERT.mapToPictureVO(picture, userVO, permissionList);
     }
 
     @Override
@@ -258,8 +268,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 .stream()
                 .collect(Collectors.groupingBy(User::getId));
         pictureVOPage.setRecords(pictureList.stream()
-                .map(picture -> PICTURE_CONVERT.mapToPictureVO(picture,
-                        userService.getUserVO(userIdUserListMap.get(picture.getUserId()).get(0))))
+                .map(picture -> {
+                    User user = userIdUserListMap.get(picture.getUserId()).get(0);
+                    List<String> permissionList = spaceUserAuthManager
+                            .getPermissionList(spaceService.getById(picture.getSpaceId()), user);
+                    return PICTURE_CONVERT.mapToPictureVO(picture,
+                            userService.getUserVO(user), permissionList);
+                })
                 .collect(Collectors.toList()));
         return pictureVOPage;
     }
@@ -273,7 +288,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      */
     @Override
     public Boolean editPicture(PictureEditRequest pictureEditRequest, User loginUser) {
-        checkPermissions(loginUser, pictureEditRequest.id());
+//        checkPermissions(loginUser, pictureEditRequest.id());
         Picture picture = PICTURE_CONVERT.mapToPicture(pictureEditRequest);
         // 补充审核参数
         this.fillReviewParams(picture, loginUser);
@@ -286,7 +301,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     public Boolean doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser) {
         // 1. 判断图片是否存在
         Long pictureId = pictureReviewRequest.id();
-        checkPictureExist(pictureId, true);
+//        checkPictureExist(pictureId, true);
         // 2. 校验审核状态是否重复，不允许重复审核
         Picture oldPicture = this.lambdaQuery()
                 .select(Picture::getReviewStatus)
@@ -377,7 +392,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Override
     public List<ImageSearchResult> searchPictureByPicture(SearchPictureByPictureRequest searchPictureByPictureRequest) {
         Long pictureId = searchPictureByPictureRequest.pictureId();
-        checkPictureExist(pictureId, true);
+//        checkPictureExist(pictureId, true);
         Picture picture = this.lambdaQuery()
                 .select(Picture::getUrl)
                 .eq(Picture::getId, pictureId)
@@ -398,8 +413,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         String picColor = searchPictureByColorRequest.picColor();
         boolean isPrivateSpace = ObjectUtil.isNotNull(spaceId);
         // 1. 校验空间权限
-        ThrowUtils.throwIf(isPrivateSpace && !spaceService.checkSpaceExistByUser(spaceId, loginUser),
-                ErrorCode.NO_AUTH_ERROR, "空间不存在或无权限");
+        /*ThrowUtils.throwIf(isPrivateSpace && !spaceService.checkSpaceExistByUser(spaceId, loginUser),
+                ErrorCode.NO_AUTH_ERROR, "空间不存在或无权限");*/
         // 2. 查询该空间下的所有图片
         LambdaQueryChainWrapper<Picture> queryChainWrapper = this.lambdaQuery()
                 .isNotNull(Picture::getPicColor);
@@ -429,7 +444,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                     return -PictureUtils.calculateSimilarity(targetColor, Color.decode(hexColor));
                 }))
                 .limit(12)
-                .map(picture -> PICTURE_CONVERT.mapToPictureVO(picture, null))
+                .map(picture -> PICTURE_CONVERT.mapToPictureVO(picture, null, null))
                 .collect(Collectors.toList());
     }
 
@@ -445,13 +460,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Long spaceId = pictureEditByBatchRequest.spaceId();
         // 1. 校验空间权限
         boolean isUseSpace = ObjectUtil.isNotNull(spaceId);
-        boolean nonAdmin = !userService.isAdmin(loginUser);
+       /* boolean nonAdmin = !userService.isAdmin(loginUser);
         if (!isUseSpace) {
             ThrowUtils.throwIf(nonAdmin, ErrorCode.NO_AUTH_ERROR);
         } else {
             ThrowUtils.throwIf(!spaceService.checkSpaceExistByUser(spaceId, loginUser) && nonAdmin,
                     ErrorCode.NO_AUTH_ERROR, "空间不存在或无权限");
-        }
+        }*/
         // 2. 获取图片列表（选择需要的字段）
         List<Picture> pictureList = this.lambdaQuery()
                 .select(Picture::getId)
@@ -490,7 +505,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     (CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
         Long pictureId = createPictureOutPaintingTaskRequest.pictureId();
         // 校验权限
-        checkPermissions(loginUser, pictureId);
+//        checkPermissions(loginUser, pictureId);
         String url = this.lambdaQuery()
                 .select(Picture::getUrl)
                 .eq(Picture::getId, pictureId)
@@ -583,7 +598,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 .one();
         ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
         if (ObjectUtil.isNull(picture.getSpaceId())) {
-            // 公共图库，仅本人或管理员可操作
+            // 公共图库，仅本人或管理员可操作或编辑者也可操作
             if (!picture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
             }

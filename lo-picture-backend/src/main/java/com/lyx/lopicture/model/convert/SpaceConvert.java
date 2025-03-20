@@ -11,6 +11,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper
 public interface SpaceConvert {
 
@@ -25,7 +27,8 @@ public interface SpaceConvert {
     @Mappings({
             @Mapping(source = "space.id", target = "id"),
             @Mapping(source = "space.createTime", target = "createTime"),
-            @Mapping(source = "userVO", target = "user")
+            @Mapping(source = "userVO", target = "user"),
+            @Mapping(source = "permissionList", target = "permissionList")
     })
-    SpaceVO mapToSpaceVO(Space space, UserVO userVO);
+    SpaceVO mapToSpaceVO(Space space, UserVO userVO, List<String> permissionList);
 }

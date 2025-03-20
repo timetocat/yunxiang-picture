@@ -9,6 +9,8 @@ import com.lyx.lopicture.common.ResultUtils;
 import com.lyx.lopicture.constant.UserConstant;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.exception.ThrowUtils;
+import com.lyx.lopicture.manager.auth.annotation.SaSpaceCheckPermission;
+import com.lyx.lopicture.manager.auth.model.SpaceUserPermissionConstant;
 import com.lyx.lopicture.model.dto.space.SpaceAddRequest;
 import com.lyx.lopicture.model.dto.space.SpaceEditRequest;
 import com.lyx.lopicture.model.dto.space.SpaceQueryRequest;
@@ -45,6 +47,7 @@ public class SpaceController {
     }
 
     @PostMapping("/delete")
+    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_DELETE)
     public BaseResponse<Boolean> deleteSpace(@RequestBody DeleteRequest deleteRequest
             , HttpServletRequest request) {
         ThrowUtils.throwIf(deleteRequest == null || deleteRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
@@ -123,6 +126,7 @@ public class SpaceController {
      * 编辑空间（给用户使用）
      */
     @PostMapping("/edit")
+    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_EDIT)
     public BaseResponse<Boolean> editSpace(@RequestBody SpaceEditRequest spaceEditRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(spaceEditRequest == null, ErrorCode.PARAMS_ERROR);
         return ResultUtils.success(spaceService.editSpace(spaceEditRequest,

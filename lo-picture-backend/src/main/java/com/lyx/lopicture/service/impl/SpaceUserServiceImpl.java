@@ -66,7 +66,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
 
     @Override
     public Boolean deleteSpaceUser(Long id, User loginUser) {
-        checkPermissions(loginUser, id);
+//        checkPermissions(loginUser, id);
         boolean result = this.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return true;
@@ -87,16 +87,16 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         Long spaceId = spaceUserQueryRequest.spaceId();
         Long userId = spaceUserQueryRequest.userId();
         // 1. 校验是否存在团队空间
-        boolean exist = this.lambdaQuery()
+        /*boolean exist = this.lambdaQuery()
                 .eq(SpaceUser::getSpaceId, spaceId)
                 .exists();
-        ThrowUtils.throwIf(!exist, ErrorCode.NOT_FOUND_ERROR, "该空间不存在");
+        ThrowUtils.throwIf(!exist, ErrorCode.NOT_FOUND_ERROR, "该空间不存在");*/
         // 2. 校验权限
-        exist = this.lambdaQuery()
+        /*exist = this.lambdaQuery()
                 .eq(SpaceUser::getSpaceId, spaceId)
                 .eq(SpaceUser::getUserId, loginUser.getId())
                 .exists();
-        ThrowUtils.throwIf(!exist || userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);
+        ThrowUtils.throwIf(!exist || userService.isAdmin(loginUser), ErrorCode.NO_AUTH_ERROR);*/
         // 3. 根据条件查询
         LambdaQueryChainWrapper<SpaceUser> wrapper = this.lambdaQuery()
                 .eq(idExist, SpaceUser::getId, id);
@@ -120,7 +120,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
     @Override
     public Boolean editSpaceUser(SpaceUserEditRequest spaceEditRequest, User loginUser) {
         // 1. 校验权限
-        checkPermissions(loginUser, spaceEditRequest.id());
+//        checkPermissions(loginUser, spaceEditRequest.id());
         // 2. 编辑空间用户
         SpaceUser spaceUser = SPACE_USER_CONVERT.mapToSpaceUser(spaceEditRequest);
         boolean result = this.updateById(spaceUser);
