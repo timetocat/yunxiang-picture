@@ -29,4 +29,14 @@ public interface SpaceUserPermissionConstant {
      * 图片删除权限
      */
     String PICTURE_DELETE = "picture:delete";
+
+    /**
+     * 空间编辑权限
+     */
+    String SPACE_EDIT = "space:edit";
+
+    /**
+     * 空间删除权限
+     */
+    String SPACE_DELETE = "space:delete";
 }
