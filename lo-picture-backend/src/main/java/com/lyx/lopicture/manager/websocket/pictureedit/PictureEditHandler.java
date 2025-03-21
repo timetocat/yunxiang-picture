@@ -1,5 +1,6 @@
 package com.lyx.lopicture.manager.websocket.pictureedit;
 
+import com.lyx.lopicture.manager.websocket.pictureedit.disruptor.PictureEditEventProducer;
 import com.lyx.lopicture.manager.websocket.pictureedit.model.PictureEditMessageTypeEnum;
 import com.lyx.lopicture.manager.websocket.pictureedit.model.PictureEditRequestMessage;
 import com.lyx.lopicture.manager.websocket.pictureedit.model.PictureEditResponseMessage;
@@ -33,6 +34,8 @@ public class PictureEditHandler extends TextWebSocketHandler {
     @Resource
     private PictureEditMessageStrategyExecutor pictureEditMessageStrategyExecutor;
 
+    @Resource
+    private PictureEditEventProducer pictureEditEventProducer;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -57,14 +60,11 @@ public class PictureEditHandler extends TextWebSocketHandler {
         // 将消息解析为 PictureEditMessage
         PictureEditRequestMessage pictureEditRequestMessage = ObjectMapperUtils.getObjectMapper()
                 .readValue(message.getPayload(), PictureEditRequestMessage.class);
-        String type = pictureEditRequestMessage.type();
         // 从 session 中获取公共属性
         Map<String, Object> attributes = session.getAttributes();
         User user = (User) attributes.get("user");
         Long pictureId = (Long) attributes.get("pictureId");
-        // 调用消息处理执行器
-        pictureEditMessageStrategyExecutor.handleMessage(type, pictureEditRequestMessage,
-                session, user, pictureId);
+        pictureEditEventProducer.publishEvent(pictureEditRequestMessage, session, user, pictureId);
     }
 
     @Override

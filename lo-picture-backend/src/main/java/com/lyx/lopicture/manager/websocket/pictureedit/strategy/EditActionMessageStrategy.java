@@ -50,7 +50,8 @@ public class EditActionMessageStrategy implements PictureEditMessageStrategy {
         if (ObjUtil.isNotNull(editingUserId) && editingUserId.equals(user.getId())) {
             PictureEditResponseMessage responseMessage = PictureEditResponseMessage.builder()
                     .type(PictureEditMessageTypeEnum.EDIT_ACTION.getValue())
-                    .message(String.format("%s执行了%s", user.getUserName(), actionEnum.getText()))
+                    .editAction(actionEnum.getValue())
+                    .message(String.format("%s 执行了 %s", user.getUserName(), actionEnum.getText()))
                     .user(userService.getUserVO(user))
                     .build();
             // 广播给除了当前客户端之外的其他用户，否则会造成重复编辑
