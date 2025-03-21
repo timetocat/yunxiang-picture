@@ -59,6 +59,15 @@ public interface SpaceService extends IService<Space> {
     SpaceVO getSpaceVO(Space space, HttpServletRequest request);
 
     /**
+     * 获取空间视图对象
+     *
+     * @param space     空间对象
+     * @param loginUser 登录用户
+     * @return 空间视图
+     */
+    SpaceVO getSpaceVO(Space space, User loginUser);
+
+    /**
      * 获取空间分页对象
      *
      * @param spaceQueryRequest 空间查询请求

@@ -268,10 +268,12 @@ public class SpaceAnalyzeServiceImpl extends ServiceImpl<SpaceMapper, Space>
         // 公共图库
         if (spaceAnalyzeRequest.isQueryPublic()) {
             queryWrapper.isNull(Picture::getSpaceId);
+            return;
         }
         Long spaceId = spaceAnalyzeRequest.getSpaceId();
         if (ObjectUtil.isNotNull(spaceId)) { // 私有图库
             queryWrapper.eq(Picture::getSpaceId, spaceId);
+            return;
         }
         throw new BusinessException(ErrorCode.PARAMS_ERROR, "未指定查询范围");
     }

@@ -91,7 +91,6 @@ public class SpaceUserController {
      */
     @PostMapping("/list")
     @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<List<SpaceUserVO>> listSpaceUserByPage(@RequestBody SpaceUserQueryRequest spaceQueryRequest,
                                                                HttpServletRequest request) {
         ThrowUtils.throwIf(spaceQueryRequest == null, ErrorCode.PARAMS_ERROR);

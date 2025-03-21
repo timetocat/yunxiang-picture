@@ -91,12 +91,12 @@
 
     <update id="updateSpaceCapacity">
         UPDATE space
-        SET total_size = total_size + #{size}
-            AND total_count = total_count + 1
+        SET total_size  = total_size + #{size},
+            total_count = total_count + 1
         WHERE is_delete = 0
           AND id = #{id}
-          AND total_size + #{size} &lt; space.max_size
-          AND total_count + 1 &lt; space.max_count
+          AND total_size + #{size} &lt;= space.max_size
+          AND total_count + 1 &lt;= space.max_count
     </update>
 
     <select id="getAnalyzeByLevel"

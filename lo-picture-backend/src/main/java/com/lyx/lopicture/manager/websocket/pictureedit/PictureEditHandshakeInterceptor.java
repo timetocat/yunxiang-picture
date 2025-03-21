@@ -84,7 +84,7 @@ public class PictureEditHandshakeInterceptor implements HandshakeInterceptor {
                     log.error("space not exist, 拒绝握手");
                     return false;
                 }
-                if (SpaceTypeEnum.TEAM.getValue().equals(space.getSpaceType())) {
+                if (!SpaceTypeEnum.TEAM.getValue().equals(space.getSpaceType())) {
                     log.error("图片所在空间不是团队空间，拒绝握手");
                     return false;
                 }

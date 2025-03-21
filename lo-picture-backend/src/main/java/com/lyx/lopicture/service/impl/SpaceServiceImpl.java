@@ -144,15 +144,25 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
      */
     @Override
     public SpaceVO getSpaceVO(Space space, HttpServletRequest request) {
+        return this.getSpaceVO(space, userService.getLoginUser(request));
+    }
+
+    /**
+     * 获取空间视图对象
+     *
+     * @param space     空间对象
+     * @param loginUser 登录用户
+     * @return 空间视图
+     */
+    @Override
+    public SpaceVO getSpaceVO(Space space, User loginUser) {
         Long userId = space.getUserId();
-        User user = null;
         UserVO userVO = null;
         if (userId != null && userId > 0) {
-            user = userService.getById(userId);
-            userVO = userService.getUserVO(user);
+            userVO = userService.getUserVO(userService.getById(userId));
         }
         List<String> permissionList = spaceUserAuthManager
-                .getPermissionList(space, user);
+                .getPermissionList(space, loginUser);
         return SPACE_CONVERT.mapToSpaceVO(space, userVO, permissionList);
     }
 
@@ -191,11 +201,11 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                 .collect(Collectors.groupingBy(User::getId));
         SpaceVOPage.setRecords(spaceList.stream()
                 .map(space -> {
-                    User user = userIdUserListMap.get(space.getUserId()).get(0);
                     List<String> permissionList = spaceUserAuthManager
-                            .getPermissionList(space, user);
+                            .getPermissionList(space, userService.getLoginUser(request));
                     return SPACE_CONVERT.mapToSpaceVO(space,
-                            userService.getUserVO(user), permissionList);
+                            userService.getUserVO(userIdUserListMap.get(space.getUserId()).get(0)),
+                            permissionList);
                 })
                 .collect(Collectors.toList()));
         return SpaceVOPage;

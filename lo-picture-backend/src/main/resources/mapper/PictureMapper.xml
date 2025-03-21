@@ -178,10 +178,10 @@
                 DATE_FORMAT(picture.create_time, '%Y-%m-%d')
             </when>
             <when test="query.timeDimension == 'week' ">
-                YEARWEEK(picture.createTime)
+                YEARWEEK(picture.create_time)
             </when>
             <otherwise>
-                DATE_FORMAT(picture.createTime, '%Y-%m')
+                DATE_FORMAT(picture.create_time, '%Y-%m')
             </otherwise>
         </choose>
         as period,
@@ -214,10 +214,10 @@
                 DATE_FORMAT(picture.create_time, '%Y-%m-%d')
             </when>
             <when test="query.timeDimension == 'week' ">
-                YEARWEEK(picture.createTime)
+                YEARWEEK(picture.create_time)
             </when>
             <otherwise>
-                DATE_FORMAT(picture.createTime, '%Y-%m')
+                DATE_FORMAT(picture.create_time, '%Y-%m')
             </otherwise>
         </choose>
         as period,

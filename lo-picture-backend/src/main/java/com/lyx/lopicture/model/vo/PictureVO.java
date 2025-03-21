@@ -1,6 +1,5 @@
 package com.lyx.lopicture.model.vo;
 
-import cn.hutool.core.collection.CollUtil;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -56,7 +55,7 @@ public record PictureVO(
 ) implements Serializable {
 
     public PictureVO {
-        permissionList = Collections.emptyList();
+        permissionList = permissionList != null ? permissionList : Collections.emptyList();
     }
 
     @Serial

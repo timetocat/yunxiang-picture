@@ -42,7 +42,7 @@ public record SpaceVO(
 ) implements Serializable {
 
     public SpaceVO {
-        permissionList = Collections.emptyList();
+        permissionList = permissionList != null ? permissionList : Collections.emptyList();
     }
 
     @Serial

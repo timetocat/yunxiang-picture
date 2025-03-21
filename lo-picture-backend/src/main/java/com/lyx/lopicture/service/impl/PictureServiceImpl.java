@@ -229,14 +229,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Override
     public PictureVO getPictureVO(Picture picture, HttpServletRequest request) {
         Long userId = picture.getUserId();
-        User user = null;
         UserVO userVO = null;
         if (userId != null && userId > 0) {
-            user = userService.getById(userId);
-            userVO = userService.getUserVO(user);
+            userVO = userService.getUserVO(userService.getById(userId));
         }
         List<String> permissionList = spaceUserAuthManager
-                .getPermissionList(spaceService.getById(picture.getSpaceId()), user);
+                .getPermissionList(spaceService.getById(picture.getSpaceId()), userService.getLoginUser(request));
         return PICTURE_CONVERT.mapToPictureVO(picture, userVO, permissionList);
     }
 
@@ -269,11 +267,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 .collect(Collectors.groupingBy(User::getId));
         pictureVOPage.setRecords(pictureList.stream()
                 .map(picture -> {
-                    User user = userIdUserListMap.get(picture.getUserId()).get(0);
                     List<String> permissionList = spaceUserAuthManager
-                            .getPermissionList(spaceService.getById(picture.getSpaceId()), user);
+                            .getPermissionList(spaceService.getById(picture.getSpaceId()),
+                                    userService.getLoginUser(request));
                     return PICTURE_CONVERT.mapToPictureVO(picture,
-                            userService.getUserVO(user), permissionList);
+                            userService.getUserVO(userIdUserListMap.get(picture.getUserId()).get(0)),
+                            permissionList);
                 })
                 .collect(Collectors.toList()));
         return pictureVOPage;

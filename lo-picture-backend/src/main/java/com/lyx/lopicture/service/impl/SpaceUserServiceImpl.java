@@ -191,7 +191,7 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
                         space = spaceIdSpaceListMap.get(spaceId).get(0);
                     }
                     return SPACE_USER_CONVERT.mapToSpaceUserVO(spaceUser,
-                            spaceService.getSpaceVO(space, null),
+                            spaceService.getSpaceVO(space, loginUser),
                             userService.getUserVO(user));
                 })
                 .toList();
