@@ -1,6 +1,7 @@
 package com.lyx.lopicture.common;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.text.CharSequenceUtil;
 import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.utils.SqlUtils;
@@ -33,6 +34,8 @@ public class PageRequest implements Validator {
     public void validate() {
         if (CollUtil.isEmpty(sortFieldPairs)) return;
         for (SortFieldPair sortFieldPair : sortFieldPairs) {
+            sortFieldPair.setSortField(CharSequenceUtil
+                    .toUnderlineCase(sortFieldPair.getSortField()));
             if (!SqlUtils.validSortField(sortFieldPair.getSortField())) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "排序字段非法");
             }

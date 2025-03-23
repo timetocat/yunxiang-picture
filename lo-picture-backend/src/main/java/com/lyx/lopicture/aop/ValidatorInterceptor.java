@@ -11,8 +11,7 @@ import org.springframework.stereotype.Component;
 public class ValidatorInterceptor {
 
     // 参数校验
-    @Before("execution(* com.lyx.lopicture.service.impl.*.*(..)) " + "&&" +
-            " !target(com.baomidou.mybatisplus.extension.service.impl.ServiceImpl) ")
+    @Before("execution(* com.lyx.lopicture.service.impl.*.*(..))")
     public void doBefore(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
         for (Object arg : args) {
