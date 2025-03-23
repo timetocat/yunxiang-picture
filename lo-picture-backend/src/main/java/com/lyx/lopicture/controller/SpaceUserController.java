@@ -80,7 +80,7 @@ public class SpaceUserController {
      */
     @PostMapping("/edit")
     @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
-    public BaseResponse<Boolean> editSpace(@RequestBody SpaceUserEditRequest spaceUserEditRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> editSpaceUser(@RequestBody SpaceUserEditRequest spaceUserEditRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(spaceUserEditRequest == null, ErrorCode.PARAMS_ERROR);
         return ResultUtils.success(spaceUserService.editSpaceUser(spaceUserEditRequest,
                 userService.getLoginUser(request)));
@@ -91,7 +91,7 @@ public class SpaceUserController {
      */
     @PostMapping("/list")
     @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
-    public BaseResponse<List<SpaceUserVO>> listSpaceUserByPage(@RequestBody SpaceUserQueryRequest spaceQueryRequest,
+    public BaseResponse<List<SpaceUserVO>> listSpaceUser(@RequestBody SpaceUserQueryRequest spaceQueryRequest,
                                                                HttpServletRequest request) {
         ThrowUtils.throwIf(spaceQueryRequest == null, ErrorCode.PARAMS_ERROR);
         List<SpaceUser> spaceUserList = spaceUserService
