@@ -108,8 +108,19 @@ public class UserController {
 
     @PostMapping("/update/password")
     public BaseResponse<Boolean> updatePassword(@RequestBody PasswordUpdateRequest passwordUpdateRequest,
-                                               HttpServletRequest request) {
+                                                HttpServletRequest request) {
         ThrowUtils.throwIf(passwordUpdateRequest == null, ErrorCode.PARAMS_ERROR);
         return ResultUtils.success(userService.updatePassword(passwordUpdateRequest, request));
+    }
+
+    /**
+     * 兑换会员
+     */
+    @PostMapping("/exchange/vip")
+    public BaseResponse<Boolean> exchangeVip(@RequestBody VipExchangeRequest vipExchangeRequest,
+                                             HttpServletRequest request) {
+        ThrowUtils.throwIf(vipExchangeRequest == null, ErrorCode.PARAMS_ERROR);
+        return ResultUtils.success(userService.exchangeVip(vipExchangeRequest,
+                userService.getLoginUser(request)));
     }
 }

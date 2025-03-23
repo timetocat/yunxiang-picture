@@ -8,8 +8,8 @@ public enum UserRoleEnum implements BaseValueEnum<String> {
 
     USER("用户", "user"),
     ADMIN("管理员", "admin"),
-    /*BAN("被封号", "ban"),
-    VIP("会员", "vip")*/;
+    /*BAN("被封号", "ban")*/
+    VIP("会员", "vip");
 
     final Class<String> RETURN_TYPE = String.class;
 

@@ -27,3 +27,8 @@ ALTER TABLE picture
 ALTER TABLE space
     ADD COLUMN space_type int default 0 not null comment '空间类型：0-私有 1-团队';
 
+-- 扩展用户表：新增会员功能
+ALTER TABLE user
+    ADD COLUMN vip_expire_time datetime NULL COMMENT '会员过期时间',
+    ADD COLUMN vip_code        char(8)  NULL COMMENT '会员兑换码',
+    ADD COLUMN vip_number      bigint   NULL COMMENT '会员编号';

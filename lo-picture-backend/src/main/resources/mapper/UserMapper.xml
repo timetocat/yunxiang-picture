@@ -12,6 +12,9 @@
         <result property="userAvatar" column="user_avatar" jdbcType="VARCHAR"/>
         <result property="userProfile" column="user_profile" jdbcType="VARCHAR"/>
         <result property="userRole" column="user_role" jdbcType="VARCHAR"/>
+        <result property="vipExpireTime" column="vip_expire_time" jdbcType="TIMESTAMP"/>
+        <result property="vipCode" column="vip_code" jdbcType="CHAR"/>
+        <result property="vipNumber" column="vip_number" jdbcType="BIGINT"/>
         <result property="editTime" column="edit_time" jdbcType="TIMESTAMP"/>
         <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
         <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
@@ -21,7 +24,8 @@
     <sql id="Base_Column_List">
         id,user_account,user_password,
         user_name,user_avatar,user_profile,
-        user_role,edit_time,create_time,
+        user_role,vip_expire_time,vip_code,
+        vip_numberedit_time,create_time,
         update_time,is_delete
     </sql>
 

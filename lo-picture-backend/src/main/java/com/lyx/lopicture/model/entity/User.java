@@ -58,6 +58,24 @@ public class User implements Serializable {
     private String userRole = UserRoleEnum.USER.getValue();
 
     /**
+     * 会员过期时间
+     */
+    @TableField(value = "vip_expire_time")
+    private Date vipExpireTime;
+
+    /**
+     * 会员兑换码
+     */
+    @TableField(value = "vip_code")
+    private String vipCode;
+
+    /**
+     * 会员编号
+     */
+    @TableField(value = "vip_number")
+    private Long vipNumber;
+
+    /**
      * 编辑时间
      */
     @TableField(value = "edit_time")

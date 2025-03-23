@@ -166,4 +166,12 @@ public interface UserService extends IService<User> {
      */
     Boolean isAdmin(User user);
 
+    /**
+     * 兑换会员
+     *
+     * @param vipExchangeRequest 兑换会员请求
+     * @param loginUser          登录用户
+     * @return 是否兑换成功
+     */
+    Boolean exchangeVip(VipExchangeRequest vipExchangeRequest, User loginUser);
 }
