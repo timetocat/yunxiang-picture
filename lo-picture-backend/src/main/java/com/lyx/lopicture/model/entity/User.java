@@ -22,6 +22,12 @@ public class User implements Serializable {
     private Long id;
 
     /**
+     * 用户邮箱
+     */
+    @TableField(value = "email")
+    private String email;
+
+    /**
      * 账号
      */
     @TableField(value = "user_account")

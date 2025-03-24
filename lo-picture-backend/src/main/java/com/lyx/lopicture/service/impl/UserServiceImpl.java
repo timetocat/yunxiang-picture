@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -12,7 +13,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lyx.lopicture.constant.UserConstant;
 import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
@@ -26,10 +26,13 @@ import com.lyx.lopicture.model.enums.UserRoleEnum;
 import com.lyx.lopicture.model.vo.LoginUserVO;
 import com.lyx.lopicture.model.vo.UserVO;
 import com.lyx.lopicture.service.UserService;
+import com.lyx.lopicture.utils.CaptchaUtils;
+import com.lyx.lopicture.utils.EmailSenderUtils;
 import com.lyx.lopicture.utils.ObjectMapperUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
@@ -41,6 +44,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -67,9 +73,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Value("${default.password:12345678}")
     private String defaultPassword;
 
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private EmailSenderUtils emailSenderUtil;
+
     // 新增依赖注入
     @Resource
     private ResourceLoader resourceLoader;
+
+    Map<String, Object> lockMap = new ConcurrentHashMap<>();
 
     // 文件读写锁（确保并发安全）
     private final ReentrantLock fileLock = new ReentrantLock();
@@ -84,20 +98,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public Long userRegister(UserRegisterRequest userRegisterRequest) {
         String userAccount = userRegisterRequest.userAccount();
         String userPassword = userRegisterRequest.userPassword();
-        // 检查是否重复账户
-        Long count = this.baseMapper.selectCount(Wrappers.lambdaQuery(User.class)
-                .eq(User::getUserAccount, userAccount));
-        ThrowUtils.throwIf(count > 0, ErrorCode.PARAMS_ERROR, "账户已存在");
-        // 加密
-        String encryptPassword = getEncryptPassword(userPassword);
-        // 插入数据
-        User user = new User();
-        user.setUserAccount(userAccount);
-        user.setUserPassword(encryptPassword);
-        user.setUserName(defaultUsername);
-        boolean saveResult = this.save(user);
-        ThrowUtils.throwIf(!saveResult, ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误!");
-        return user.getId();
+        String code = userRegisterRequest.code();
+        String email = userRegisterRequest.email();
+        // 校验验证码
+        String verifyCodeKey = String.format("email:code:verify:register:%s", email);
+        String correctCode = stringRedisTemplate.opsForValue().get(verifyCodeKey);
+        ThrowUtils.throwIf(correctCode == null || !correctCode.equals(code),
+                ErrorCode.PARAMS_ERROR, "验证码错误或已过期");
+        Object lock = lockMap.computeIfAbsent(email, key -> new Object());
+        synchronized (lock) {
+            // 检查是否重复账户
+            /*Long count = this.baseMapper.selectCount(Wrappers.lambdaQuery(User.class)
+                    .eq(User::getUserAccount, userAccount));*/
+            boolean exists = this.lambdaQuery()
+                    .and(i -> i.eq(User::getEmail, email)
+                            .or()
+                            .eq(User::getUserAccount, userAccount))
+                    .exists();
+            ThrowUtils.throwIf(exists, ErrorCode.PARAMS_ERROR, "邮箱已注册过或账户已存在");
+            // 加密
+            String encryptPassword = getEncryptPassword(userPassword);
+            // 插入数据
+            User user = new User();
+            user.setUserAccount(userAccount);
+            user.setUserPassword(encryptPassword);
+            user.setUserName(defaultUsername);
+            user.setEmail(email);
+            boolean saveResult = this.save(user);
+            ThrowUtils.throwIf(!saveResult, ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误!");
+            stringRedisTemplate.delete(verifyCodeKey);
+            return user.getId();
+        }
     }
 
     /**
@@ -109,6 +140,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     @Override
     public LoginUserVO userLogin(UserLoginRequest userLoginRequest, HttpServletRequest request) {
+        // 校验验证码
+        String code = userLoginRequest.verifyCode();
+        String serverVerifyCode = userLoginRequest.serverVerifyCode();
+        ThrowUtils.throwIf(!CaptchaUtils.checkCaptcha(code, serverVerifyCode), ErrorCode.PARAMS_ERROR,
+                "验证码错误");
         // 加密
         String encryptPassword = getEncryptPassword(userLoginRequest.userPassword());
         User user = this.baseMapper.selectOne(Wrappers.lambdaQuery(User.class)
@@ -404,6 +440,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 更新用户信息
         updateUserVipInfo(loginUser, targetCode.getCode());
         return true;
+    }
+
+    /**
+     * 发送邮箱验证码
+     *
+     * @param emailCodeRequest
+     * @param request
+     */
+    @Override
+    public void sendEmailCode(EmailCodeRequest emailCodeRequest, HttpServletRequest request) {
+        // todo 校验请求是否频繁
+        String email = emailCodeRequest.email();
+        String type = emailCodeRequest.type();
+        String code = RandomUtil.randomNumbers(6);
+        try {
+            emailSenderUtil.sendEmail(email, code);
+        } catch (Exception e) {
+            log.error("发送邮件失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "发送邮件失败");
+        }
+        // 将验证码存入Redis，设置5分钟过期
+        String verifyCodeKey = String.format("email:code:verify:%s:%s", type, email);
+        stringRedisTemplate.opsForValue().set(verifyCodeKey, code, 5, TimeUnit.MINUTES);
     }
 
 

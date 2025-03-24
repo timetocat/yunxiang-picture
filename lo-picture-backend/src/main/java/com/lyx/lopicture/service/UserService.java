@@ -174,4 +174,12 @@ public interface UserService extends IService<User> {
      * @return 是否兑换成功
      */
     Boolean exchangeVip(VipExchangeRequest vipExchangeRequest, User loginUser);
+
+    /**
+     * 发送邮箱验证码
+     *
+     * @param emailCodeRequest
+     * @param request
+     */
+    void sendEmailCode(EmailCodeRequest emailCodeRequest, HttpServletRequest request);
 }

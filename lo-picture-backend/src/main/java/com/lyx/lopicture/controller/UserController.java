@@ -1,10 +1,12 @@
 package com.lyx.lopicture.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lyx.lopicture.annotation.AuthCheck;
 import com.lyx.lopicture.common.BaseResponse;
 import com.lyx.lopicture.common.ResultUtils;
 import com.lyx.lopicture.constant.UserConstant;
+import com.lyx.lopicture.exception.BusinessException;
 import com.lyx.lopicture.exception.ErrorCode;
 import com.lyx.lopicture.exception.ThrowUtils;
 import com.lyx.lopicture.model.dto.user.*;
@@ -12,10 +14,12 @@ import com.lyx.lopicture.model.entity.User;
 import com.lyx.lopicture.model.vo.LoginUserVO;
 import com.lyx.lopicture.model.vo.UserVO;
 import com.lyx.lopicture.service.UserService;
+import com.lyx.lopicture.utils.CaptchaUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 
 @RestController
@@ -122,5 +126,20 @@ public class UserController {
         ThrowUtils.throwIf(vipExchangeRequest == null, ErrorCode.PARAMS_ERROR);
         return ResultUtils.success(userService.exchangeVip(vipExchangeRequest,
                 userService.getLoginUser(request)));
+    }
+
+    @GetMapping("/getcode")
+    public BaseResponse<Map<String, String>> getCode() {
+        return ResultUtils.success(CaptchaUtils.getCaptcha());
+    }
+
+    /**
+     * 获取邮箱验证码
+     */
+    @PostMapping("/get_emailcode")
+    public BaseResponse<String> getEmailCode(@RequestBody EmailCodeRequest emailCodeRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(emailCodeRequest == null, ErrorCode.PARAMS_ERROR);
+        userService.sendEmailCode(emailCodeRequest, request);
+        return ResultUtils.success("验证码发送成功");
     }
 }

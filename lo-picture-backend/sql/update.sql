@@ -32,3 +32,8 @@ ALTER TABLE user
     ADD COLUMN vip_expire_time datetime NULL COMMENT '会员过期时间',
     ADD COLUMN vip_code        char(8)  NULL COMMENT '会员兑换码',
     ADD COLUMN vip_number      bigint   NULL COMMENT '会员编号';
+
+ALTER TABLE user
+    ADD email varchar(256) NULL COMMENT '用户邮箱';
+
+CREATE UNIQUE INDEX idx_email ON user (email, id);
